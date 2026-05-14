@@ -1,0 +1,143 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id           String   @id @default(cuid())
+  name         String
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  memberships   OrganizationMember[]
+  expenses      Expense[]            @relation("SubmittedBy")
+  comments      ExpenseComment[]
+  notifications Notification[]
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  currency  String   @default("USD")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  members         OrganizationMember[]
+  invitations     Invitation[]
+  categories      Category[]
+  expenses        Expense[]
+  notifications   Notification[]
+}
+
+model OrganizationMember {
+  id             String     @id @default(cuid())
+  organizationId String
+  userId         String
+  role           MemberRole
+  joinedAt       DateTime   @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, userId])
+}
+
+enum MemberRole {
+  owner
+  admin
+  approver
+  member
+}
+
+model Invitation {
+  id             String     @id @default(cuid())
+  organizationId String
+  email          String
+  role           MemberRole
+  token          String     @unique @default(cuid())
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  createdAt      DateTime   @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}
+
+model Category {
+  id             String   @id @default(cuid())
+  organizationId String
+  name           String
+  archived       Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  expenses     Expense[]
+}
+
+model Expense {
+  id             String        @id @default(cuid())
+  organizationId String
+  submittedById  String
+  categoryId     String?
+  amount         Decimal       @db.Decimal(10, 2)
+  currency       String        @default("USD")
+  merchant       String
+  date           DateTime
+  notes          String?
+  status         ExpenseStatus @default(pending)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  organization Organization    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  submittedBy  User            @relation("SubmittedBy", fields: [submittedById], references: [id])
+  category     Category?       @relation(fields: [categoryId], references: [id])
+  comments     ExpenseComment[]
+  receipts     Receipt[]
+}
+
+enum ExpenseStatus {
+  pending
+  approved
+  rejected
+  needs_revision
+}
+
+model ExpenseComment {
+  id        String   @id @default(cuid())
+  expenseId String
+  authorId  String
+  body      String
+  createdAt DateTime @default(now())
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  author  User    @relation(fields: [authorId], references: [id])
+}
+
+model Receipt {
+  id          String   @id @default(cuid())
+  expenseId   String
+  filename    String
+  mimeType    String
+  storagePath String
+  createdAt   DateTime @default(now())
+
+  expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+}
+
+model Notification {
+  id             String   @id @default(cuid())
+  userId         String
+  organizationId String
+  message        String
+  read           Boolean  @default(false)
+  createdAt      DateTime @default(now())
+
+  user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+}

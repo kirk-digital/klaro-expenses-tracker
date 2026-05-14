@@ -1,36 +1,75 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Expenses Tracker
 
-## Getting Started
+Multi-tenant SaaS-style expense management for teams. Organisations are isolated by `organizationId` on every query; access is enforced with membership and role checks.
 
-First, run the development server:
+## Prerequisites
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- Node.js 18+
+- PostgreSQL 14+
+- npm
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Setup
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. **Clone and install**
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```bash
+   npm install
+   ```
 
-## Learn More
+2. **Environment**
 
-To learn more about Next.js, take a look at the following resources:
+   Copy `.env.example` to `.env` and set:
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+   - `DATABASE_URL` — PostgreSQL connection string
+   - `NEXTAUTH_SECRET` and/or `AUTH_SECRET` — long random string for JWT signing (Auth.js v5 reads either)
+   - `NEXTAUTH_URL` — public app URL (e.g. `http://localhost:3000` in development)
+   - `RECEIPT_STORAGE_PATH` — root directory for receipt files (defaults under `/var/data/...` if unset; ensure the process can write here)
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+3. **Database**
 
-## Deploy on Vercel
+   ```bash
+   npx prisma migrate dev --name init
+   npm run db:seed
+   ```
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+   Or without migrations during prototyping:
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+   ```bash
+   npm run db:push
+   npm run db:seed
+   ```
+
+4. **Run**
+
+   ```bash
+   npm run dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000).
+
+## Seeded accounts
+
+After `npm run db:seed`:
+
+| Email            | Password     | Role in Acme |
+| ---------------- | ------------ | ------------- |
+| owner@test.com   | password123  | Owner         |
+| member@test.com  | password123  | Member        |
+
+Organisation: **Acme Inc**, slug `acme` — sign in and go to `/org/acme/dashboard`.
+
+## Production (nginx + pm2)
+
+- Build: `npm run build`
+- Start: `npm run start` (or run via `pm2 start npm --name expenses-tracker -- start`)
+- Set `NEXTAUTH_URL` to your public HTTPS URL
+- Configure nginx `client_max_body_size` to at least **12M** for receipt uploads
+- Ensure `RECEIPT_STORAGE_PATH` exists and is writable by the Node process
+
+## Stack
+
+Next.js 14 (App Router), TypeScript, Tailwind CSS, shadcn/ui, Prisma, PostgreSQL, Auth.js v5 (credentials + bcrypt), Recharts, Sonner.
+
+## V1 scope
+
+Email delivery, billing, exports, and accounting integrations are intentionally out of scope.
