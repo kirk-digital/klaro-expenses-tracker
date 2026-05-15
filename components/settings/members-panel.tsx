@@ -39,7 +39,15 @@ type MemberRow = {
 
 const roles: MemberRole[] = ["owner", "admin", "approver", "member"];
 
-export function MembersPanel({ slug, initialMembers }: { slug: string; initialMembers: MemberRow[] }) {
+export function MembersPanel({
+  slug,
+  currentUserId,
+  initialMembers,
+}: {
+  slug: string;
+  currentUserId: string;
+  initialMembers: MemberRow[];
+}) {
   const [members, setMembers] = useState(initialMembers);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
@@ -177,16 +185,22 @@ export function MembersPanel({ slug, initialMembers }: { slug: string; initialMe
             </TableRow>
           </TableHeader>
           <TableBody>
-            {members.map((m) => (
+            {members.map((m) => {
+              const isSelf = m.user.id === currentUserId;
+              return (
               <TableRow key={m.id}>
                 <TableCell className="font-medium">{m.user.name}</TableCell>
                 <TableCell>{m.user.email}</TableCell>
                 <TableCell>
                   <Select
                     value={m.role}
+                    disabled={isSelf}
                     onValueChange={(v) => v && updateRole(m.user.id, v as MemberRole)}
                   >
-                    <SelectTrigger className="w-36">
+                    <SelectTrigger
+                      className="w-36"
+                      title={isSelf ? "You cannot change your own role" : undefined}
+                    >
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -204,7 +218,8 @@ export function MembersPanel({ slug, initialMembers }: { slug: string; initialMe
                   </Button>
                 </TableCell>
               </TableRow>
-            ))}
+            );
+            })}
           </TableBody>
         </Table>
       </div>

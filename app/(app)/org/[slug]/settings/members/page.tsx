@@ -30,5 +30,11 @@ export default async function MembersSettingsPage({ params }: Props) {
     user: m.user,
   }));
 
-  return <MembersPanel slug={params.slug} initialMembers={rows} />;
+  return (
+    <MembersPanel
+      slug={params.slug}
+      currentUserId={session.user.id}
+      initialMembers={rows}
+    />
+  );
 }

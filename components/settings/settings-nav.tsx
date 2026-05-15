@@ -8,6 +8,7 @@ const links = (slug: string) => [
   { href: `/org/${slug}/settings`, label: "General" },
   { href: `/org/${slug}/settings/members`, label: "Members" },
   { href: `/org/${slug}/settings/categories`, label: "Categories" },
+  { href: `/org/${slug}/settings/security`, label: "Security" },
 ];
 
 export function SettingsNav({ slug }: { slug: string }) {

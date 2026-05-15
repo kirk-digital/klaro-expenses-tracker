@@ -35,6 +35,10 @@ export async function PATCH(request: Request) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
   }
 
+  if (body.userId === org.userId) {
+    return NextResponse.json({ error: "You cannot change your own role" }, { status: 403 });
+  }
+
   const target = await prisma.organizationMember.findFirst({
     where: { organizationId: org.organization.id, userId: body.userId },
   });
