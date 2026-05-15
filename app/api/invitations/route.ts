@@ -48,6 +48,33 @@ export async function GET(request: Request) {
   return NextResponse.json(invitations);
 }
 
+export async function DELETE(request: Request) {
+  const org = await requireOrgFromRequest(request);
+  if (org instanceof Response) return org;
+
+  const membership = await requireOrgMember(org.userId, org.organization.id);
+  if (!canManageMembers(membership.role)) {
+    return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+  }
+
+  const url = new URL(request.url);
+  const id = url.searchParams.get("id");
+  if (!id) {
+    return NextResponse.json({ error: "Missing invitation id" }, { status: 400 });
+  }
+
+  const invitation = await prisma.invitation.findFirst({
+    where: { id, organizationId: org.organization.id },
+  });
+
+  if (!invitation) {
+    return NextResponse.json({ error: "Invitation not found" }, { status: 404 });
+  }
+
+  await prisma.invitation.delete({ where: { id } });
+  return NextResponse.json({ success: true });
+}
+
 export async function POST(request: Request) {
   const org = await requireOrgFromRequest(request);
   if (org instanceof Response) return org;

@@ -30,11 +30,22 @@ export default async function MembersSettingsPage({ params }: Props) {
     user: m.user,
   }));
 
+  const pendingInvitations = await prisma.invitation.findMany({
+    where: {
+      organizationId: access.organization.id,
+      acceptedAt: null,
+      expiresAt: { gt: new Date() },
+    },
+    orderBy: { createdAt: "desc" },
+    select: { id: true, email: true, role: true, expiresAt: true },
+  });
+
   return (
     <MembersPanel
       slug={params.slug}
       currentUserId={session.user.id}
       initialMembers={rows}
+      initialInvitations={pendingInvitations}
     />
   );
 }

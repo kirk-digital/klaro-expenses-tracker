@@ -37,18 +37,33 @@ type MemberRow = {
   user: Pick<User, "id" | "name" | "email">;
 };
 
+type InvitationRow = {
+  id: string;
+  email: string;
+  role: MemberRole;
+  expiresAt: Date;
+};
+
 const roles: MemberRole[] = ["owner", "admin", "approver", "member"];
+
+function formatExpiry(date: Date): string {
+  const d = new Date(date);
+  return d.toLocaleDateString("en-GB", { day: "numeric", month: "short", year: "numeric" });
+}
 
 export function MembersPanel({
   slug,
   currentUserId,
   initialMembers,
+  initialInvitations = [],
 }: {
   slug: string;
   currentUserId: string;
   initialMembers: MemberRow[];
+  initialInvitations?: InvitationRow[];
 }) {
   const [members, setMembers] = useState(initialMembers);
+  const [invitations, setInvitations] = useState(initialInvitations);
   const [inviteOpen, setInviteOpen] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState<MemberRole>("member");
@@ -62,12 +77,22 @@ export function MembersPanel({
     [slug]
   );
 
-  function refresh() {
+  function refreshMembers() {
     startTransition(async () => {
       const res = await fetch("/api/members", { headers });
       if (res.ok) {
         const data = (await res.json()) as MemberRow[];
         setMembers(data);
+      }
+    });
+  }
+
+  function refreshInvitations() {
+    startTransition(async () => {
+      const res = await fetch("/api/invitations", { headers });
+      if (res.ok) {
+        const data = (await res.json()) as InvitationRow[];
+        setInvitations(data);
       }
     });
   }
@@ -84,12 +109,27 @@ export function MembersPanel({
       toast.error(data.error || "Could not create invitation");
       return;
     }
-    toast.success("Invitation created", {
-      description: data.inviteUrl,
-      duration: 12000,
+    toast.success("Invitation sent", {
+      description: `An invite email has been sent to ${inviteEmail}.`,
     });
     setInviteEmail("");
     setInviteOpen(false);
+    refreshInvitations();
+  }
+
+  async function revokeInvitation(id: string, email: string) {
+    if (!confirm(`Revoke the invitation for ${email}?`)) return;
+    const res = await fetch(`/api/invitations?id=${encodeURIComponent(id)}`, {
+      method: "DELETE",
+      headers,
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) {
+      toast.error(data.error || "Could not revoke invitation");
+      return;
+    }
+    toast.success("Invitation revoked");
+    setInvitations((prev) => prev.filter((inv) => inv.id !== id));
   }
 
   async function updateRole(userId: string, role: MemberRole) {
@@ -104,7 +144,7 @@ export function MembersPanel({
       return;
     }
     toast.success("Role updated");
-    refresh();
+    refreshMembers();
   }
 
   async function removeMember(userId: string) {
@@ -119,14 +159,15 @@ export function MembersPanel({
       return;
     }
     toast.success("Member removed");
-    refresh();
+    refreshMembers();
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
+      {/* Header + Invite button */}
       <div className="flex flex-wrap items-center justify-between gap-4">
         <p className="text-sm text-muted-foreground">
-          Invite teammates with a link. Email delivery is not configured in V1.
+          Manage who has access to this organisation.
         </p>
         <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
           <DialogTrigger className={buttonVariants()}>
@@ -135,7 +176,9 @@ export function MembersPanel({
           <DialogContent>
             <DialogHeader>
               <DialogTitle>Invite by email</DialogTitle>
-              <DialogDescription>They must sign up or sign in with this email to accept.</DialogDescription>
+              <DialogDescription>
+                They will receive an email with a sign-up link tied to their role.
+              </DialogDescription>
             </DialogHeader>
             <form className="space-y-4" onSubmit={invite}>
               <div className="space-y-2">
@@ -167,13 +210,14 @@ export function MembersPanel({
                 </Select>
               </div>
               <Button type="submit" disabled={pending}>
-                Create invitation
+                Send invitation
               </Button>
             </form>
           </DialogContent>
         </Dialog>
       </div>
 
+      {/* Active members table */}
       <div className="rounded-lg border bg-card">
         <Table>
           <TableHeader>
@@ -188,41 +232,91 @@ export function MembersPanel({
             {members.map((m) => {
               const isSelf = m.user.id === currentUserId;
               return (
-              <TableRow key={m.id}>
-                <TableCell className="font-medium">{m.user.name}</TableCell>
-                <TableCell>{m.user.email}</TableCell>
-                <TableCell>
-                  <Select
-                    value={m.role}
-                    disabled={isSelf}
-                    onValueChange={(v) => v && updateRole(m.user.id, v as MemberRole)}
-                  >
-                    <SelectTrigger
-                      className="w-36"
-                      title={isSelf ? "You cannot change your own role" : undefined}
+                <TableRow key={m.id}>
+                  <TableCell className="font-medium">{m.user.name}</TableCell>
+                  <TableCell>{m.user.email}</TableCell>
+                  <TableCell>
+                    <Select
+                      value={m.role}
+                      disabled={isSelf}
+                      onValueChange={(v) => v && updateRole(m.user.id, v as MemberRole)}
                     >
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {roles.map((r) => (
-                        <SelectItem key={r} value={r}>
-                          {r}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </TableCell>
-                <TableCell className="text-right">
-                  <Button type="button" variant="outline" size="sm" onClick={() => removeMember(m.user.id)}>
-                    Remove
-                  </Button>
-                </TableCell>
-              </TableRow>
-            );
+                      <SelectTrigger
+                        className="w-36"
+                        title={isSelf ? "You cannot change your own role" : undefined}
+                      >
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {roles.map((r) => (
+                          <SelectItem key={r} value={r}>
+                            {r}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </TableCell>
+                  <TableCell className="text-right">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      disabled={isSelf}
+                      onClick={() => removeMember(m.user.id)}
+                    >
+                      Remove
+                    </Button>
+                  </TableCell>
+                </TableRow>
+              );
             })}
           </TableBody>
         </Table>
       </div>
+
+      {/* Pending invitations */}
+      {invitations.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium">Pending invitations</h3>
+          <div className="rounded-lg border bg-card">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Email</TableHead>
+                  <TableHead>Role</TableHead>
+                  <TableHead>Expires</TableHead>
+                  <TableHead className="text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {invitations.map((inv) => (
+                  <TableRow key={inv.id}>
+                    <TableCell>{inv.email}</TableCell>
+                    <TableCell>
+                      <span className="inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-medium capitalize">
+                        {inv.role}
+                      </span>
+                    </TableCell>
+                    <TableCell className="text-muted-foreground text-sm">
+                      {formatExpiry(inv.expiresAt)}
+                    </TableCell>
+                    <TableCell className="text-right">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        size="sm"
+                        onClick={() => revokeInvitation(inv.id, inv.email)}
+                      >
+                        Revoke
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
