@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { format } from "date-fns";
+import { ChevronRight } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveOrgAccess } from "@/lib/org";
@@ -10,8 +11,6 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ExpenseStatusBadge } from "@/components/expenses/status-badge";
 import { CategoryIcon } from "@/components/expenses/category-icon";
 import { ExpenseReviewActions } from "@/components/expenses/expense-review-actions";
-import { Separator } from "@/components/ui/separator";
-
 type Props = { params: { slug: string; id: string } };
 
 export default async function ExpenseDetailPage({ params }: Props) {
@@ -57,12 +56,15 @@ export default async function ExpenseDetailPage({ params }: Props) {
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="text-sm text-muted-foreground">
-            <Link href={`/org/${params.slug}/expenses`} className="hover:underline">
+          <p className="flex items-center gap-1 text-sm text-muted-foreground">
+            <Link
+              href={`/org/${params.slug}/expenses`}
+              className="transition-colors hover:text-foreground"
+            >
               Expenses
             </Link>
-            <span className="px-1">/</span>
-            <span>{expense.merchant}</span>
+            <ChevronRight className="h-3.5 w-3.5" />
+            <span className="text-foreground">{expense.merchant}</span>
           </p>
           <h1 className="text-2xl font-semibold tracking-tight">{expense.merchant}</h1>
         </div>
@@ -121,23 +123,21 @@ export default async function ExpenseDetailPage({ params }: Props) {
                 Open PDF receipt
               </a>
             ) : (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={receiptUrl} alt="Receipt" className="max-h-96 rounded-md border object-contain" />
+              <div className="overflow-hidden rounded-lg border bg-muted/30">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={receiptUrl}
+                  alt="Receipt"
+                  className="mx-auto max-h-[480px] w-auto object-contain"
+                />
+              </div>
             )}
           </CardContent>
         </Card>
       ) : null}
 
       {showReview ? (
-        <Card className="rounded-xl">
-          <CardHeader>
-            <CardTitle>Review</CardTitle>
-            <CardDescription>Approve, reject, or request changes</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <ExpenseReviewActions slug={params.slug} expenseId={expense.id} />
-          </CardContent>
-        </Card>
+        <ExpenseReviewActions slug={params.slug} expenseId={expense.id} />
       ) : null}
 
       <Card className="rounded-xl">
@@ -149,15 +149,21 @@ export default async function ExpenseDetailPage({ params }: Props) {
           {expense.comments.length === 0 ? (
             <p className="text-sm text-muted-foreground">No comments yet.</p>
           ) : (
-            expense.comments.map((c) => (
-              <div key={c.id}>
-                <p className="text-xs text-muted-foreground">
-                  {c.author.name} · {format(c.createdAt, "MMM d, yyyy HH:mm")}
-                </p>
-                <p className="whitespace-pre-wrap text-sm">{c.body}</p>
-                <Separator className="mt-3" />
-              </div>
-            ))
+            <div className="space-y-3">
+              {expense.comments.map((c) => (
+                <div key={c.id} className="rounded-lg border bg-muted/40 p-3">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="text-sm font-medium">{c.author.name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      {format(c.createdAt, "MMM d, HH:mm")}
+                    </p>
+                  </div>
+                  <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
+                    {c.body}
+                  </p>
+                </div>
+              ))}
+            </div>
           )}
         </CardContent>
       </Card>

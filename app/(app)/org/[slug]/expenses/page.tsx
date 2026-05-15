@@ -116,7 +116,9 @@ export default async function ExpensesListPage({ params, searchParams }: Props) 
 
       {rows.length === 0 ? (
         <div className="flex flex-col items-center justify-center gap-4 rounded-xl border bg-card py-16 text-center">
-          <Receipt className="h-12 w-12 text-muted-foreground" />
+          <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+            <Receipt className="h-5 w-5 text-muted-foreground" />
+          </div>
           <div>
             <h2 className="text-lg font-semibold">
               {hasActiveFilters ? "No expenses match your filters" : "No expenses yet"}

@@ -52,11 +52,11 @@ function SidebarContent({
 
   return (
     <div className="flex h-full flex-col">
-      <div className="mb-8 px-2">
-        <p className="text-xs font-medium uppercase tracking-widest text-slate-400">
-          Organisation
-        </p>
-        <p className="truncate font-bold text-white">{orgName}</p>
+      <div className="mb-8 flex items-center gap-2.5 px-2">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-indigo-500 text-xs font-bold text-white">
+          {orgName.slice(0, 1).toUpperCase()}
+        </div>
+        <p className="truncate text-sm font-semibold text-white">{orgName}</p>
       </div>
 
       <nav className="flex flex-1 flex-col gap-1">
@@ -72,10 +72,10 @@ function SidebarContent({
               href={item.href}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-colors",
                 active
-                  ? "bg-slate-700 text-white"
-                  : "text-slate-300 hover:bg-slate-800 hover:text-white"
+                  ? "border-white bg-white/10 font-semibold text-white"
+                  : "border-transparent text-slate-400 hover:bg-white/5 hover:text-white"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -86,7 +86,17 @@ function SidebarContent({
       </nav>
 
       <div className="mt-auto border-t border-slate-700 pt-4">
-        <p className="truncate px-2 text-sm font-medium text-white">{userName}</p>
+        <div className="flex items-center gap-3 px-2">
+          <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-600 text-xs font-semibold text-white">
+            {userName
+              .split(" ")
+              .map((n) => n[0])
+              .join("")
+              .slice(0, 2)
+              .toUpperCase()}
+          </div>
+          <p className="truncate text-sm font-medium text-white">{userName}</p>
+        </div>
         <Button
           type="button"
           variant="ghost"
@@ -124,7 +134,7 @@ export function OrgShell({
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <header className="flex items-center gap-2 border-b bg-background px-4 py-3 md:hidden">
+        <header className="flex items-center gap-3 border-b bg-background px-4 py-3 md:hidden">
           <Sheet>
             <SheetTrigger
               className={buttonVariants({ variant: "outline", size: "icon" })}
@@ -141,7 +151,10 @@ export function OrgShell({
               />
             </SheetContent>
           </Sheet>
-          <span className="truncate font-medium">{orgName}</span>
+          <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-indigo-500 text-[10px] font-bold text-white">
+            {orgName.slice(0, 1).toUpperCase()}
+          </div>
+          <span className="truncate text-sm font-semibold">{orgName}</span>
         </header>
         <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-4 sm:px-6 md:py-8">
           {children}

@@ -46,30 +46,32 @@ export default async function NotificationsPage({ params }: Props) {
         </CardHeader>
         <CardContent className="space-y-3">
           {items.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No notifications yet.</p>
+            <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                <Bell className="h-5 w-5 text-muted-foreground" />
+              </div>
+              <div>
+                <h2 className="font-semibold">No notifications yet</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  You&apos;ll see updates about expenses and approvals here.
+                </p>
+              </div>
+            </div>
           ) : (
             items.map((n) => (
               <div
                 key={n.id}
                 className={cn(
-                  "rounded-lg px-3 py-2",
-                  n.read
-                    ? "text-muted-foreground"
-                    : "border-l-4 border-blue-500 bg-blue-50"
+                  "flex items-start gap-3 rounded-lg border bg-card px-4 py-3",
+                  !n.read && "border-l-4 border-l-primary"
                 )}
               >
-                <div className="flex items-start gap-2">
-                  {!n.read ? (
-                    <span className="mt-1.5 size-2 shrink-0 rounded-full bg-blue-500" />
-                  ) : (
-                    <span className="mt-1.5 size-2 shrink-0" />
-                  )}
-                  <div className="min-w-0 flex-1">
-                    <p className="text-xs text-muted-foreground">
-                      {formatDistanceToNow(n.createdAt, { addSuffix: true })}
-                    </p>
-                    <p className="text-sm">{n.message}</p>
-                  </div>
+                <Bell className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs text-muted-foreground">
+                    {formatDistanceToNow(n.createdAt, { addSuffix: true })}
+                  </p>
+                  <p className={cn("text-sm", n.read && "text-muted-foreground")}>{n.message}</p>
                 </div>
               </div>
             ))

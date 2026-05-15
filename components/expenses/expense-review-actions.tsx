@@ -46,7 +46,8 @@ export function ExpenseReviewActions({
   }
 
   return (
-    <div className="space-y-4 rounded-lg border bg-muted/30 p-4">
+    <div className="space-y-4 rounded-xl border bg-card p-5 shadow-sm">
+      <p className="text-sm font-semibold">Review this expense</p>
       <div className="space-y-2">
         <Label htmlFor="review-comment">Comment</Label>
         <Textarea
@@ -55,13 +56,14 @@ export function ExpenseReviewActions({
           onChange={(e) => setComment(e.target.value)}
           rows={3}
           placeholder="Required for reject or request revision"
+          className="resize-none"
         />
       </div>
       <div className="flex flex-wrap gap-2">
         <Button
           type="button"
-          variant="default"
           disabled={loading !== null}
+          className="w-full bg-emerald-600 text-white hover:bg-emerald-700 sm:w-auto"
           onClick={() => submit("approved")}
         >
           {loading === "approved" ? "Saving…" : "Approve"}
@@ -69,6 +71,7 @@ export function ExpenseReviewActions({
         <Button
           type="button"
           variant="destructive"
+          className="w-full sm:w-auto"
           disabled={loading !== null}
           onClick={() => submit("rejected")}
         >
@@ -77,6 +80,7 @@ export function ExpenseReviewActions({
         <Button
           type="button"
           variant="secondary"
+          className="w-full sm:w-auto"
           disabled={loading !== null}
           onClick={() => submit("needs_revision")}
         >

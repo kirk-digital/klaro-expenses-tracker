@@ -134,34 +134,46 @@ export default async function DashboardPage({ params }: Props) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className="relative overflow-hidden rounded-xl border-l-4 border-green-500">
+        <Card className="rounded-xl border-l-4 border-green-500">
           <CardHeader className="pb-2">
-            <TrendingUp className="absolute right-4 top-4 h-5 w-5 text-green-500" />
-            <CardDescription>Approved spend (this month)</CardDescription>
-            <CardTitle className="text-3xl font-bold">
+            <CardDescription className="flex items-center gap-1.5">
+              <TrendingUp className="h-3.5 w-3.5 text-green-500" />
+              Approved spend
+            </CardDescription>
+            <CardTitle className="text-3xl font-bold tabular-nums">
               {formatMoney(totalSpend)}
             </CardTitle>
+            <p className="text-xs text-muted-foreground">This calendar month</p>
           </CardHeader>
         </Card>
-        <Card className="relative overflow-hidden rounded-xl border-l-4 border-amber-500">
+        <Card className="rounded-xl border-l-4 border-amber-500">
           <CardHeader className="pb-2">
-            <Clock className="absolute right-4 top-4 h-5 w-5 text-amber-500" />
-            <CardDescription>Pending approvals</CardDescription>
-            <CardTitle className="text-3xl font-bold">{pendingApprovals}</CardTitle>
+            <CardDescription className="flex items-center gap-1.5">
+              <Clock className="h-3.5 w-3.5 text-amber-500" />
+              Pending approvals
+            </CardDescription>
+            <CardTitle className="text-3xl font-bold tabular-nums">{pendingApprovals}</CardTitle>
+            <p className="text-xs text-muted-foreground">Awaiting your decision</p>
           </CardHeader>
         </Card>
-        <Card className="relative overflow-hidden rounded-xl border-l-4 border-blue-500">
+        <Card className="rounded-xl border-l-4 border-blue-500">
           <CardHeader className="pb-2">
-            <CheckCircle className="absolute right-4 top-4 h-5 w-5 text-blue-500" />
-            <CardDescription>Approved (this month)</CardDescription>
-            <CardTitle className="text-3xl font-bold">{approvedCount}</CardTitle>
+            <CardDescription className="flex items-center gap-1.5">
+              <CheckCircle className="h-3.5 w-3.5 text-blue-500" />
+              Approved
+            </CardDescription>
+            <CardTitle className="text-3xl font-bold tabular-nums">{approvedCount}</CardTitle>
+            <p className="text-xs text-muted-foreground">Expenses this month</p>
           </CardHeader>
         </Card>
-        <Card className="relative overflow-hidden rounded-xl border-l-4 border-red-500">
+        <Card className="rounded-xl border-l-4 border-red-500">
           <CardHeader className="pb-2">
-            <XCircle className="absolute right-4 top-4 h-5 w-5 text-red-500" />
-            <CardDescription>Rejected (this month)</CardDescription>
-            <CardTitle className="text-3xl font-bold">{rejectedCount}</CardTitle>
+            <CardDescription className="flex items-center gap-1.5">
+              <XCircle className="h-3.5 w-3.5 text-red-500" />
+              Rejected
+            </CardDescription>
+            <CardTitle className="text-3xl font-bold tabular-nums">{rejectedCount}</CardTitle>
+            <p className="text-xs text-muted-foreground">This calendar month</p>
           </CardHeader>
         </Card>
       </div>
@@ -196,17 +208,18 @@ export default async function DashboardPage({ params }: Props) {
                 <Link
                   key={e.id}
                   href={`/org/${params.slug}/expenses/${e.id}`}
-                  className="flex items-center justify-between rounded-xl border p-3 text-sm transition-colors hover:bg-muted/50"
+                  className="flex items-center gap-3 rounded-xl border p-3 text-sm transition-colors hover:bg-muted/50"
                 >
-                  <div>
-                    <p className="font-medium">{e.merchant}</p>
-                    <p className="text-muted-foreground">
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{e.merchant}</p>
+                    <p className="text-xs text-muted-foreground">
                       {e.submittedBy.name} · {e.category?.name ?? "—"}
                     </p>
                   </div>
-                  <span className="font-medium tabular-nums">
+                  <span className="shrink-0 font-semibold tabular-nums">
                     {formatMoney(Number(e.amount))}
                   </span>
+                  <Receipt className="h-4 w-4 shrink-0 text-muted-foreground" />
                 </Link>
               ))}
             </CardContent>
@@ -224,7 +237,9 @@ export default async function DashboardPage({ params }: Props) {
         <CardContent>
           {recent.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
-              <Receipt className="h-12 w-12 text-muted-foreground" />
+              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-muted">
+                <Receipt className="h-5 w-5 text-muted-foreground" />
+              </div>
               <div>
                 <h2 className="text-lg font-semibold">No expenses yet</h2>
                 <p className="mt-1 text-sm text-muted-foreground">
