@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -35,6 +35,9 @@ function SignUpForm() {
   const inviteToken = searchParams.get("token") ?? searchParams.get("invite");
   const [loading, setLoading] = useState(false);
   const [inviteEmailLocked, setInviteEmailLocked] = useState(false);
+  // Keep the invite email in a ref so the submit handler always has the
+  // authoritative value even if FormData can't read it (iOS readOnly quirk).
+  const inviteEmailRef = useRef<string>("");
 
   const form = useForm<Form>({
     resolver: zodResolver(schema),
@@ -62,6 +65,7 @@ function SignUpForm() {
         return;
       }
       if (typeof data.email === "string") {
+        inviteEmailRef.current = data.email;
         setValue("email", data.email);
         setInviteEmailLocked(true);
       }
@@ -156,6 +160,18 @@ function SignUpForm() {
             const fd = new FormData(e.currentTarget);
             const fields = ["name", "email", "password", "confirmPassword"] as const;
             fields.forEach((key) => {
+              // When the invite email is locked, skip the FormData read for email —
+              // it may be empty on iOS if the field was programmatically set.
+              // The authoritative value is already in inviteEmailRef and RHF state.
+              if (key === "email" && inviteEmailLocked) {
+                if (inviteEmailRef.current) {
+                  form.setValue("email", inviteEmailRef.current, {
+                    shouldValidate: false,
+                    shouldDirty: true,
+                  });
+                }
+                return;
+              }
               const val = fd.get(key);
               if (typeof val === "string") {
                 form.setValue(key, val, { shouldValidate: false, shouldDirty: true });
@@ -173,14 +189,23 @@ function SignUpForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              autoComplete="email"
-              readOnly={inviteEmailLocked}
-              className={inviteEmailLocked ? "bg-muted" : undefined}
-              {...form.register("email")}
-            />
+            {inviteEmailLocked ? (
+              <>
+                {/* Hidden input keeps the value in FormData and registers with RHF */}
+                <input type="hidden" {...form.register("email")} value={inviteEmailRef.current} />
+                {/* Display the email as a non-interactive styled element */}
+                <div className="flex h-9 w-full items-center rounded-lg border border-input bg-muted px-3 text-sm text-muted-foreground select-none">
+                  {inviteEmailRef.current}
+                </div>
+              </>
+            ) : (
+              <Input
+                id="email"
+                type="email"
+                autoComplete="email"
+                {...form.register("email")}
+              />
+            )}
             {form.formState.errors.email && (
               <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
             )}
