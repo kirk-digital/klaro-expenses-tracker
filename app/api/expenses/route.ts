@@ -121,8 +121,34 @@ export async function POST(request: Request) {
 
   const full = await prisma.expense.findFirst({
     where: { id: expense.id, organizationId: org.organization.id },
-    include: { category: true, receipts: true },
+    include: { category: true, receipts: true, submittedBy: { select: { name: true } } },
   });
+
+  const submitterName = full?.submittedBy?.name ?? "A team member";
+
+  // Notify all approvers/admins/owners in the org about the new pending expense
+  try {
+    const approvers = await prisma.organizationMember.findMany({
+      where: {
+        organizationId: org.organization.id,
+        role: { in: ["owner", "admin", "approver"] },
+        userId: { not: org.userId }, // don't notify the submitter themselves
+      },
+      select: { userId: true },
+    });
+
+    if (approvers.length > 0) {
+      await prisma.notification.createMany({
+        data: approvers.map(({ userId }) => ({
+          userId,
+          organizationId: org.organization.id,
+          message: `${submitterName} submitted "${merchant}" for ${org.organization.currency} ${amount.toFixed(2)} — awaiting approval.`,
+        })),
+      });
+    }
+  } catch (e) {
+    console.error("[expenses] Failed to create notifications", e);
+  }
 
   return NextResponse.json({
     ...full,

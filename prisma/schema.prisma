@@ -25,7 +25,7 @@ model Organization {
   id        String   @id @default(cuid())
   name      String
   slug      String   @unique
-  currency  String   @default("USD")
+  currency  String   @default("GBP")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
