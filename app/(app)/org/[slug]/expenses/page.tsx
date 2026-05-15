@@ -80,7 +80,6 @@ export default async function ExpensesListPage({ params, searchParams }: Props) 
     id: e.id,
     merchant: e.merchant,
     amount: e.amount.toString(),
-    currency: e.currency,
     date: e.date.toISOString(),
     status: e.status,
     category: e.category ? { name: e.category.name } : null,

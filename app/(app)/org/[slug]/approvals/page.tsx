@@ -32,7 +32,6 @@ export default async function ApprovalsPage({ params }: Props) {
     id: e.id,
     merchant: e.merchant,
     amount: e.amount.toString(),
-    currency: e.currency,
     date: e.date.toISOString(),
     status: "pending",
     category: e.category ? { name: e.category.name } : null,

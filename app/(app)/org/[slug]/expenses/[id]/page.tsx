@@ -24,6 +24,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
     where: { id: params.id, organizationId: access.organization.id },
     include: {
       category: true,
+      fund: true,
       submittedBy: { select: { id: true, name: true, email: true } },
       receipts: true,
       comments: {
@@ -98,6 +99,27 @@ export default async function ExpenseDetailPage({ params }: Props) {
             <p className="text-muted-foreground">Created</p>
             <p className="font-medium">{format(expense.createdAt, "MMM d, yyyy HH:mm")}</p>
           </div>
+          {expense.expenseType === "mileage" && expense.miles !== null && (
+            <>
+              <div>
+                <p className="text-muted-foreground">Miles driven</p>
+                <p className="font-medium">{Number(expense.miles).toLocaleString()} miles</p>
+              </div>
+              <div>
+                <p className="text-muted-foreground">AMAP rate</p>
+                <p className="font-medium">{Number(expense.amapRate) * 100}p/mile</p>
+              </div>
+            </>
+          )}
+          {expense.fundType && (
+            <div>
+              <p className="text-muted-foreground">Fund</p>
+              <p className="font-medium capitalize">
+                {expense.fundType}
+                {expense.fund?.name && ` — ${expense.fund.name}`}
+              </p>
+            </div>
+          )}
           {expense.notes ? (
             <div className="sm:col-span-2">
               <p className="text-muted-foreground">Notes</p>

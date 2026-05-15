@@ -2,12 +2,20 @@
 
 import { useEffect, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import type { OrgType } from "@prisma/client";
 import { slugify } from "@/lib/slug";
 import { createOrganizationAction } from "@/lib/actions/organization";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function OnboardingForm() {
   const router = useRouter();
@@ -16,6 +24,7 @@ export function OnboardingForm() {
   const [name, setName] = useState("");
   const [slug, setSlug] = useState("");
   const [slugTouched, setSlugTouched] = useState(false);
+  const [orgType, setOrgType] = useState<OrgType>("business");
 
   useEffect(() => {
     if (!slugTouched && name) {
@@ -27,6 +36,7 @@ export function OnboardingForm() {
     e.preventDefault();
     setError(null);
     const fd = new FormData(e.currentTarget);
+    fd.set("type", orgType);
     startTransition(async () => {
       const res = await createOrganizationAction(null, fd);
       if (res.error) {
@@ -75,6 +85,25 @@ export function OnboardingForm() {
             />
             <p className="text-xs text-muted-foreground">
               Your workspace URL will be <span className="font-mono">/org/{slug || "…"}</span>
+            </p>
+          </div>
+          <div className="space-y-2">
+            <Label>Organisation type</Label>
+            <Select
+              value={orgType}
+              onValueChange={(v) => v && setOrgType(v as OrgType)}
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select type" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="sole_trader">Sole trader</SelectItem>
+                <SelectItem value="business">Business / limited company</SelectItem>
+                <SelectItem value="charity">Charity / nonprofit</SelectItem>
+              </SelectContent>
+            </Select>
+            <p className="text-xs text-muted-foreground">
+              This sets your default expense categories. You can change it later in Settings.
             </p>
           </div>
           {error && <p className="text-sm text-destructive">{error}</p>}

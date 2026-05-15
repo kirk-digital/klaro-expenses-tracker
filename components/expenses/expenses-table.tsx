@@ -19,7 +19,6 @@ export type ExpenseListRow = {
   id: string;
   merchant: string;
   amount: string;
-  currency: string;
   date: string;
   status: ExpenseStatus;
   category: { name: string } | null;

@@ -22,7 +22,6 @@ export type PendingExpenseRow = {
   id: string;
   merchant: string;
   amount: string;
-  currency: string;
   date: string;
   status: "pending";
   category: { name: string } | null;

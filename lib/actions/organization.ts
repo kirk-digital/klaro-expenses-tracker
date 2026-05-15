@@ -3,7 +3,8 @@
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { slugify } from "@/lib/slug";
-import { DEFAULT_CATEGORY_NAMES } from "@/lib/constants";
+import type { OrgType } from "@prisma/client";
+import { getDefaultCategories } from "@/lib/categories";
 import { resolveOrgAccess } from "@/lib/org";
 import { canManageOrg } from "@/lib/role-helpers";
 
@@ -18,6 +19,9 @@ export async function createOrganizationAction(
   }
 
   const name = String(formData.get("name") ?? "").trim();
+  const orgTypeRaw = String(formData.get("type") ?? "business").trim();
+  const orgType: OrgType =
+    orgTypeRaw === "sole_trader" || orgTypeRaw === "charity" ? orgTypeRaw : "business";
   let slug = String(formData.get("slug") ?? "").trim().toLowerCase();
   if (!name) {
     return { error: "Organisation name is required" };
@@ -38,7 +42,7 @@ export async function createOrganizationAction(
 
   const org = await prisma.$transaction(async (tx) => {
     const organization = await tx.organization.create({
-      data: { name, slug, currency: "USD" },
+      data: { name, slug, type: orgType, currency: "GBP" },
     });
     await tx.organizationMember.create({
       data: {
@@ -48,9 +52,10 @@ export async function createOrganizationAction(
       },
     });
     await tx.category.createMany({
-      data: DEFAULT_CATEGORY_NAMES.map((n) => ({
+      data: getDefaultCategories(orgType).map((c) => ({
         organizationId: organization.id,
-        name: n,
+        name: c.name,
+        hmrcCategory: c.hmrcCategory,
       })),
     });
     return organization;

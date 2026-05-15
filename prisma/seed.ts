@@ -1,5 +1,6 @@
 import { PrismaClient, ExpenseStatus, MemberRole } from "@prisma/client";
 import { hash } from "bcryptjs";
+import { getDefaultCategories } from "../lib/categories";
 
 const prisma = new PrismaClient();
 
@@ -9,6 +10,7 @@ async function main() {
   await prisma.expense.deleteMany();
   await prisma.notification.deleteMany();
   await prisma.invitation.deleteMany();
+  await prisma.fund.deleteMany();
   await prisma.category.deleteMany();
   await prisma.organizationMember.deleteMany();
   await prisma.organization.deleteMany();
@@ -36,7 +38,8 @@ async function main() {
     data: {
       name: "Acme Inc",
       slug: "acme",
-      currency: "USD",
+      type: "business",
+      currency: "GBP",
     },
   });
 
@@ -47,23 +50,15 @@ async function main() {
     ],
   });
 
-  const categoryNames = [
-    "Travel",
-    "Meals & Entertainment",
-    "Software & Subscriptions",
-    "Office Supplies",
-    "Hardware",
-    "Phone & Utilities",
-    "Marketing & Advertising",
-    "Training & Education",
-    "Professional Services",
-    "Other",
-  ];
-
+  const defaultCategories = getDefaultCategories("business");
   const categories = await Promise.all(
-    categoryNames.map((name) =>
+    defaultCategories.map((c) =>
       prisma.category.create({
-        data: { organizationId: org.id, name },
+        data: {
+          organizationId: org.id,
+          name: c.name,
+          hmrcCategory: c.hmrcCategory,
+        },
       })
     )
   );
@@ -80,9 +75,8 @@ async function main() {
       {
         organizationId: org.id,
         submittedById: member.id,
-        categoryId: cat("Travel").id,
+        categoryId: cat("Car and travel").id,
         amount: 120.5,
-        currency: "USD",
         merchant: "Airline tickets",
         date: day(4),
         status: ExpenseStatus.approved,
@@ -91,9 +85,8 @@ async function main() {
       {
         organizationId: org.id,
         submittedById: member.id,
-        categoryId: cat("Meals & Entertainment").id,
+        categoryId: cat("Marketing and subscriptions").id,
         amount: 48.2,
-        currency: "USD",
         merchant: "Team dinner",
         date: day(6),
         status: ExpenseStatus.pending,
@@ -101,9 +94,8 @@ async function main() {
       {
         organizationId: org.id,
         submittedById: member.id,
-        categoryId: cat("Software & Subscriptions").id,
+        categoryId: cat("Office and equipment").id,
         amount: 29,
-        currency: "USD",
         merchant: "SaaS subscription",
         date: day(8),
         status: ExpenseStatus.pending,
@@ -111,9 +103,8 @@ async function main() {
       {
         organizationId: org.id,
         submittedById: member.id,
-        categoryId: cat("Office Supplies").id,
+        categoryId: cat("Materials and stock").id,
         amount: 15.99,
-        currency: "USD",
         merchant: "Stationery store",
         date: day(10),
         status: ExpenseStatus.rejected,
@@ -122,9 +113,8 @@ async function main() {
       {
         organizationId: org.id,
         submittedById: member.id,
-        categoryId: cat("Hardware").id,
+        categoryId: cat("Office and equipment").id,
         amount: 899,
-        currency: "USD",
         merchant: "Laptop upgrade",
         date: day(12),
         status: ExpenseStatus.needs_revision,

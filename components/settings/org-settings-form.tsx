@@ -11,9 +11,11 @@ import { Label } from "@/components/ui/label";
 export function OrgSettingsForm({
   slug,
   initialName,
+  orgType,
 }: {
   slug: string;
   initialName: string;
+  orgType: string;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -44,6 +46,17 @@ export function OrgSettingsForm({
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input id="name" name="name" required defaultValue={initialName} />
+          </div>
+          <div className="space-y-2">
+            <Label>Organisation type</Label>
+            <div className="flex h-8 items-center rounded-lg border border-input bg-muted/30 px-3 text-sm text-muted-foreground">
+              {orgType === "sole_trader" && "Sole trader"}
+              {orgType === "business" && "Business / limited company"}
+              {orgType === "charity" && "Charity / nonprofit"}
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Contact support to change your organisation type.
+            </p>
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" disabled={pending}>

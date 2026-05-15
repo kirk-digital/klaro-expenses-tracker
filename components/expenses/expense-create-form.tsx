@@ -2,8 +2,7 @@
 
 import { useRouter } from "next/navigation";
 import { useRef, useState } from "react";
-import type { Category } from "@prisma/client";
-import { Loader2, Upload } from "lucide-react";
+import { Camera, Loader2, Receipt } from "lucide-react";
 import { toast } from "sonner";
 import { ORG_SLUG_HEADER } from "@/lib/constants";
 import { cn } from "@/lib/utils";
@@ -23,15 +22,21 @@ import {
 export function ExpenseCreateForm({
   slug,
   categories,
+  orgType,
+  funds = [],
 }: {
   slug: string;
-  categories: Category[];
+  categories: { id: string; name: string }[];
+  orgType: string;
+  funds?: { id: string; name: string }[];
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [categoryId, setCategoryId] = useState<string>(categories[0]?.id ?? "");
-  const [fileName, setFileName] = useState<string | null>(null);
+  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  const [fundType, setFundType] = useState("unrestricted");
+  const [fundId, setFundId] = useState("");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -39,6 +44,12 @@ export function ExpenseCreateForm({
     const fd = new FormData(form);
     if (categoryId) {
       fd.set("categoryId", categoryId);
+    }
+    if (orgType === "charity") {
+      fd.set("fundType", fundType);
+      if (fundType === "restricted" && fundId) {
+        fd.set("fundId", fundId);
+      }
     }
     setLoading(true);
     try {
@@ -114,6 +125,42 @@ export function ExpenseCreateForm({
             </SelectContent>
           </Select>
         </div>
+
+        {orgType === "charity" && (
+          <>
+            <div className="space-y-2">
+              <Label>Fund type</Label>
+              <Select value={fundType} onValueChange={(v) => v && setFundType(v)}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select fund type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="unrestricted">Unrestricted</SelectItem>
+                  <SelectItem value="restricted">Restricted</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            {fundType === "restricted" && (
+              <div className="space-y-2">
+                <Label>Fund name</Label>
+                <Select value={fundId} onValueChange={(v) => v && setFundId(v)}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select fund" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {funds.map((f) => (
+                      <SelectItem key={f.id} value={f.id}>
+                        {f.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
+          </>
+        )}
+
         <div className="space-y-2">
           <Label htmlFor="notes">Notes</Label>
           <Textarea id="notes" name="notes" rows={3} />
@@ -122,17 +169,26 @@ export function ExpenseCreateForm({
           <Label htmlFor="receipt-input">Receipt</Label>
           <div
             className={cn(
-              "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 text-center transition-colors hover:border-primary/50 hover:bg-muted/30",
-              fileName ? "border-primary bg-primary/5" : "border-muted-foreground/25"
+              "flex cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 text-center transition-colors",
+              "hover:border-primary/50 hover:bg-muted/30",
+              receiptFile ? "border-primary bg-primary/5" : "border-muted-foreground/25"
             )}
             onClick={() => fileInputRef.current?.click()}
           >
-            <Upload className="h-6 w-6 text-muted-foreground" />
-            {fileName ? (
-              <p className="text-sm font-medium text-primary">{fileName}</p>
+            {receiptFile ? (
+              <>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Receipt className="h-5 w-5 text-primary" />
+                </div>
+                <p className="text-sm font-medium text-primary">{receiptFile.name}</p>
+                <p className="text-xs text-muted-foreground">Tap to change</p>
+              </>
             ) : (
               <>
-                <p className="text-sm font-medium">Click to upload receipt</p>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
+                  <Camera className="h-5 w-5 text-muted-foreground" />
+                </div>
+                <p className="text-sm font-medium">Take photo or upload receipt</p>
                 <p className="text-xs text-muted-foreground">PNG, JPG or PDF · max 10 MB</p>
               </>
             )}
@@ -142,9 +198,10 @@ export function ExpenseCreateForm({
               name="receipt"
               type="file"
               accept="image/*,application/pdf"
+              capture="environment"
               required
               className="sr-only"
-              onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+              onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)}
             />
           </div>
         </div>

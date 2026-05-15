@@ -1,9 +1,9 @@
 export const runtime = "nodejs";
 
 import { NextResponse } from "next/server";
-import { ExpenseStatus } from "@prisma/client";
+import { ExpenseStatus, ExpenseType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireOrgFromRequest } from "@/lib/api-helpers";
+import { requireOrgFromRequest, type OrgRequestContext } from "@/lib/api-helpers";
 import { requireOrgMember, canViewAllExpenses } from "@/lib/permissions";
 import { saveReceipt } from "@/lib/storage";
 
@@ -31,6 +31,8 @@ export async function GET(request: Request) {
     expenses.map((e) => ({
       ...e,
       amount: e.amount.toString(),
+      miles: e.miles?.toString() ?? null,
+      amapRate: e.amapRate?.toString() ?? null,
     }))
   );
 }
@@ -41,12 +43,103 @@ export async function POST(request: Request) {
 
   await requireOrgMember(org.userId, org.organization.id);
 
+  const contentType = request.headers.get("content-type") ?? "";
+
+  if (contentType.includes("application/json")) {
+    return handleJsonExpense(request, org);
+  }
+
+  return handleFormExpense(request, org);
+}
+
+async function handleJsonExpense(request: Request, org: OrgRequestContext) {
+  const body = await request.json().catch(() => ({}));
+  const expenseType: ExpenseType =
+    body.expenseType === "mileage" ? "mileage" : "receipted";
+
+  if (expenseType !== "mileage") {
+    return NextResponse.json({ error: "Invalid expense type for JSON submission" }, { status: 400 });
+  }
+
+  const merchant = String(body.merchant ?? "").trim();
+  const amountRaw = String(body.amount ?? "");
+  const dateRaw = String(body.date ?? "");
+  const notes = body.notes ? String(body.notes) : null;
+  const milesRaw = body.miles;
+  const amapRateRaw = body.amapRate;
+  const { fundType, fundId } = body;
+
+  if (!merchant || !amountRaw || !dateRaw) {
+    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+
+  const amount = Number.parseFloat(amountRaw);
+  if (Number.isNaN(amount) || amount <= 0) {
+    return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+  }
+
+  const miles = Number(milesRaw);
+  if (Number.isNaN(miles) || miles <= 0) {
+    return NextResponse.json({ error: "Invalid miles" }, { status: 400 });
+  }
+
+  const amapRate = Number(amapRateRaw);
+  if (Number.isNaN(amapRate) || amapRate <= 0) {
+    return NextResponse.json({ error: "Invalid AMAP rate" }, { status: 400 });
+  }
+
+  const date = new Date(dateRaw);
+  if (Number.isNaN(date.getTime())) {
+    return NextResponse.json({ error: "Invalid date" }, { status: 400 });
+  }
+
+  let categoryId = body.categoryId ? String(body.categoryId) : null;
+  if (!categoryId && body.categoryName) {
+    const cat = await prisma.category.findFirst({
+      where: { organizationId: org.organization.id, name: String(body.categoryName) },
+    });
+    categoryId = cat?.id ?? null;
+  }
+
+  if (fundId) {
+    const fund = await prisma.fund.findFirst({
+      where: { id: String(fundId), organizationId: org.organization.id, archived: false },
+    });
+    if (!fund) {
+      return NextResponse.json({ error: "Invalid fund" }, { status: 400 });
+    }
+  }
+
+  const expense = await prisma.expense.create({
+    data: {
+      organizationId: org.organization.id,
+      submittedById: org.userId,
+      categoryId,
+      expenseType: "mileage",
+      amount,
+      merchant,
+      date,
+      notes,
+      miles,
+      amapRate,
+      status: ExpenseStatus.pending,
+      ...(fundType ? { fundType: String(fundType) } : {}),
+      ...(fundId ? { fundId: String(fundId) } : {}),
+    },
+  });
+
+  return finishExpenseResponse(expense.id, org, merchant, amount);
+}
+
+async function handleFormExpense(request: Request, org: OrgRequestContext) {
   const formData = await request.formData();
   const merchant = String(formData.get("merchant") ?? "").trim();
   const amountRaw = String(formData.get("amount") ?? "");
   const dateRaw = String(formData.get("date") ?? "");
   const categoryId = formData.get("categoryId") ? String(formData.get("categoryId")) : null;
   const notes = formData.get("notes") ? String(formData.get("notes")) : null;
+  const fundType = formData.get("fundType") ? String(formData.get("fundType")) : null;
+  const fundId = formData.get("fundId") ? String(formData.get("fundId")) : null;
   const file = formData.get("receipt");
 
   if (!merchant || !amountRaw || !dateRaw) {
@@ -76,6 +169,15 @@ export async function POST(request: Request) {
     }
   }
 
+  if (fundId) {
+    const fund = await prisma.fund.findFirst({
+      where: { id: fundId, organizationId: org.organization.id, archived: false },
+    });
+    if (!fund) {
+      return NextResponse.json({ error: "Invalid fund" }, { status: 400 });
+    }
+  }
+
   if (!(file instanceof File)) {
     return NextResponse.json({ error: "Receipt file is required" }, { status: 400 });
   }
@@ -95,12 +197,14 @@ export async function POST(request: Request) {
       organizationId: org.organization.id,
       submittedById: org.userId,
       categoryId,
+      expenseType: "receipted",
       amount,
-      currency: "GBP",
       merchant,
       date,
       notes,
       status: ExpenseStatus.pending,
+      ...(fundType ? { fundType } : {}),
+      ...(fundId ? { fundId } : {}),
     },
   });
 
@@ -119,20 +223,28 @@ export async function POST(request: Request) {
     },
   });
 
+  return finishExpenseResponse(expense.id, org, merchant, amount);
+}
+
+async function finishExpenseResponse(
+  expenseId: string,
+  org: { organization: { id: string; currency: string }; userId: string },
+  merchant: string,
+  amount: number
+) {
   const full = await prisma.expense.findFirst({
-    where: { id: expense.id, organizationId: org.organization.id },
+    where: { id: expenseId, organizationId: org.organization.id },
     include: { category: true, receipts: true, submittedBy: { select: { name: true } } },
   });
 
   const submitterName = full?.submittedBy?.name ?? "A team member";
 
-  // Notify all approvers/admins/owners in the org about the new pending expense
   try {
     const approvers = await prisma.organizationMember.findMany({
       where: {
         organizationId: org.organization.id,
         role: { in: ["owner", "admin", "approver"] },
-        userId: { not: org.userId }, // don't notify the submitter themselves
+        userId: { not: org.userId },
       },
       select: { userId: true },
     });
@@ -153,5 +265,7 @@ export async function POST(request: Request) {
   return NextResponse.json({
     ...full,
     amount: full?.amount.toString(),
+    miles: full?.miles?.toString() ?? null,
+    amapRate: full?.amapRate?.toString() ?? null,
   });
 }
