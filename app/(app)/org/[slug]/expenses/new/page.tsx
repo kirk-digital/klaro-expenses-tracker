@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
@@ -19,9 +20,15 @@ export default async function NewExpensePage({ params }: Props) {
   });
 
   return (
-    <div className="mx-auto max-w-xl space-y-6">
+    <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">New expense</h1>
+        <Link
+          href={`/org/${params.slug}/expenses`}
+          className="text-sm text-muted-foreground hover:text-foreground"
+        >
+          ← Expenses
+        </Link>
+        <h1 className="mt-2 text-2xl font-semibold tracking-tight">New expense</h1>
         <p className="text-muted-foreground">Submit an expense for approval</p>
       </div>
       <ExpenseCreateForm

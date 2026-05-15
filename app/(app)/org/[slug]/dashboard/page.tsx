@@ -2,6 +2,13 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { endOfMonth, format, startOfMonth } from "date-fns";
 import { ExpenseStatus } from "@prisma/client";
+import {
+  TrendingUp,
+  Clock,
+  CheckCircle,
+  XCircle,
+  Receipt,
+} from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveOrgAccess } from "@/lib/org";
@@ -17,6 +24,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { ExpenseStatusBadge } from "@/components/expenses/status-badge";
+import { CategoryIcon } from "@/components/expenses/category-icon";
 import { SpendByCategoryChart } from "@/components/dashboard/spend-chart";
 import { buttonVariants } from "@/components/ui/button";
 
@@ -126,34 +134,40 @@ export default async function DashboardPage({ params }: Props) {
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card>
+        <Card className="relative overflow-hidden rounded-xl border-l-4 border-green-500">
           <CardHeader className="pb-2">
+            <TrendingUp className="absolute right-4 top-4 h-5 w-5 text-green-500" />
             <CardDescription>Approved spend (this month)</CardDescription>
-            <CardTitle className="text-2xl">{formatMoney(totalSpend, currency)}</CardTitle>
+            <CardTitle className="text-3xl font-bold">
+              {formatMoney(totalSpend, currency)}
+            </CardTitle>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="relative overflow-hidden rounded-xl border-l-4 border-amber-500">
           <CardHeader className="pb-2">
+            <Clock className="absolute right-4 top-4 h-5 w-5 text-amber-500" />
             <CardDescription>Pending approvals</CardDescription>
-            <CardTitle className="text-2xl">{pendingApprovals}</CardTitle>
+            <CardTitle className="text-3xl font-bold">{pendingApprovals}</CardTitle>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="relative overflow-hidden rounded-xl border-l-4 border-blue-500">
           <CardHeader className="pb-2">
+            <CheckCircle className="absolute right-4 top-4 h-5 w-5 text-blue-500" />
             <CardDescription>Approved (this month)</CardDescription>
-            <CardTitle className="text-2xl">{approvedCount}</CardTitle>
+            <CardTitle className="text-3xl font-bold">{approvedCount}</CardTitle>
           </CardHeader>
         </Card>
-        <Card>
+        <Card className="relative overflow-hidden rounded-xl border-l-4 border-red-500">
           <CardHeader className="pb-2">
+            <XCircle className="absolute right-4 top-4 h-5 w-5 text-red-500" />
             <CardDescription>Rejected (this month)</CardDescription>
-            <CardTitle className="text-2xl">{rejectedCount}</CardTitle>
+            <CardTitle className="text-3xl font-bold">{rejectedCount}</CardTitle>
           </CardHeader>
         </Card>
       </div>
 
       <div className="grid gap-8 lg:grid-cols-2">
-        <Card className="lg:col-span-1">
+        <Card className="rounded-xl lg:col-span-1">
           <CardHeader>
             <CardTitle>Spend by category</CardTitle>
             <CardDescription>Approved expenses this calendar month</CardDescription>
@@ -164,7 +178,7 @@ export default async function DashboardPage({ params }: Props) {
         </Card>
 
         {canApprove(access.role) && pendingList.length > 0 ? (
-          <Card>
+          <Card className="rounded-xl">
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <div>
                 <CardTitle>Pending approvals</CardTitle>
@@ -182,7 +196,7 @@ export default async function DashboardPage({ params }: Props) {
                 <Link
                   key={e.id}
                   href={`/org/${params.slug}/expenses/${e.id}`}
-                  className="flex items-center justify-between rounded-lg border p-3 text-sm transition-colors hover:bg-muted/50"
+                  className="flex items-center justify-between rounded-xl border p-3 text-sm transition-colors hover:bg-muted/50"
                 >
                   <div>
                     <p className="font-medium">{e.merchant}</p>
@@ -202,32 +216,42 @@ export default async function DashboardPage({ params }: Props) {
         )}
       </div>
 
-      <Card>
+      <Card className="rounded-xl">
         <CardHeader>
           <CardTitle>Recent expenses</CardTitle>
           <CardDescription>Latest activity in your organisation</CardDescription>
         </CardHeader>
         <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Merchant</TableHead>
-                <TableHead>Category</TableHead>
-                <TableHead className="text-right">Amount</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead>Submitted by</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {recent.length === 0 ? (
+          {recent.length === 0 ? (
+            <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
+              <Receipt className="h-12 w-12 text-muted-foreground" />
+              <div>
+                <h2 className="text-lg font-semibold">No expenses yet</h2>
+                <p className="mt-1 text-sm text-muted-foreground">
+                  Submit your first expense to get started.
+                </p>
+              </div>
+              <Link
+                className={buttonVariants()}
+                href={`/org/${params.slug}/expenses/new`}
+              >
+                Submit your first expense
+              </Link>
+            </div>
+          ) : (
+            <Table>
+              <TableHeader>
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center text-muted-foreground">
-                    No expenses yet.
-                  </TableCell>
+                  <TableHead>Merchant</TableHead>
+                  <TableHead>Category</TableHead>
+                  <TableHead className="text-right">Amount</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Submitted by</TableHead>
                 </TableRow>
-              ) : (
-                recent.map((e) => (
+              </TableHeader>
+              <TableBody>
+                {recent.map((e) => (
                   <TableRow key={e.id}>
                     <TableCell>
                       <Link
@@ -237,7 +261,12 @@ export default async function DashboardPage({ params }: Props) {
                         {e.merchant}
                       </Link>
                     </TableCell>
-                    <TableCell>{e.category?.name ?? "—"}</TableCell>
+                    <TableCell>
+                      <span className="flex items-center gap-2">
+                        <CategoryIcon name={e.category?.name} />
+                        {e.category?.name ?? "—"}
+                      </span>
+                    </TableCell>
                     <TableCell className="text-right tabular-nums">
                       {formatMoney(Number(e.amount), e.currency)}
                     </TableCell>
@@ -247,10 +276,10 @@ export default async function DashboardPage({ params }: Props) {
                     </TableCell>
                     <TableCell>{e.submittedBy.name}</TableCell>
                   </TableRow>
-                ))
-              )}
-            </TableBody>
-          </Table>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </CardContent>
       </Card>
     </div>

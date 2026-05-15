@@ -6,5 +6,9 @@ export const DEFAULT_CATEGORY_NAMES = [
   "Software & Subscriptions",
   "Office Supplies",
   "Hardware",
+  "Phone & Utilities",
+  "Marketing & Advertising",
+  "Training & Education",
+  "Professional Services",
   "Other",
 ] as const;

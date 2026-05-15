@@ -1,26 +1,35 @@
 import type { ExpenseStatus } from "@prisma/client";
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 
-const styles: Record<ExpenseStatus, string> = {
-  pending: "bg-yellow-100 text-yellow-900 border-yellow-200 dark:bg-yellow-950 dark:text-yellow-100",
-  approved: "bg-green-100 text-green-900 border-green-200 dark:bg-green-950 dark:text-green-100",
-  rejected: "bg-red-100 text-red-900 border-red-200 dark:bg-red-950 dark:text-red-100",
-  needs_revision:
-    "bg-orange-100 text-orange-900 border-orange-200 dark:bg-orange-950 dark:text-orange-100",
-};
-
-const labels: Record<ExpenseStatus, string> = {
-  pending: "Pending",
-  approved: "Approved",
-  rejected: "Rejected",
-  needs_revision: "Needs revision",
+const config: Record<ExpenseStatus, { label: string; className: string }> = {
+  pending: {
+    label: "Pending",
+    className: "bg-amber-100 text-amber-800 border-amber-200",
+  },
+  approved: {
+    label: "Approved",
+    className: "bg-green-100 text-green-800 border-green-200",
+  },
+  rejected: {
+    label: "Rejected",
+    className: "bg-red-100 text-red-800 border-red-200",
+  },
+  needs_revision: {
+    label: "Needs revision",
+    className: "bg-orange-100 text-orange-800 border-orange-200",
+  },
 };
 
 export function ExpenseStatusBadge({ status }: { status: ExpenseStatus }) {
+  const { label, className } = config[status];
   return (
-    <Badge variant="outline" className={cn("border", styles[status])}>
-      {labels[status]}
-    </Badge>
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full border px-2 py-0.5 text-xs font-medium",
+        className
+      )}
+    >
+      {label}
+    </span>
   );
 }

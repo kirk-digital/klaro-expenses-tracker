@@ -8,6 +8,7 @@ import { canApprove, canViewAllExpenses } from "@/lib/role-helpers";
 import { formatMoney } from "@/lib/format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpenseStatusBadge } from "@/components/expenses/status-badge";
+import { CategoryIcon } from "@/components/expenses/category-icon";
 import { ExpenseReviewActions } from "@/components/expenses/expense-review-actions";
 import { Separator } from "@/components/ui/separator";
 
@@ -68,7 +69,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
         <ExpenseStatusBadge status={expense.status} />
       </div>
 
-      <Card>
+      <Card className="rounded-xl">
         <CardHeader>
           <CardTitle>Details</CardTitle>
           <CardDescription>Submitted by {expense.submittedBy.name}</CardDescription>
@@ -86,7 +87,10 @@ export default async function ExpenseDetailPage({ params }: Props) {
           </div>
           <div>
             <p className="text-muted-foreground">Category</p>
-            <p className="font-medium">{expense.category?.name ?? "—"}</p>
+            <p className="flex items-center gap-2 font-medium">
+              <CategoryIcon name={expense.category?.name} />
+              {expense.category?.name ?? "—"}
+            </p>
           </div>
           <div>
             <p className="text-muted-foreground">Created</p>
@@ -102,7 +106,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
       </Card>
 
       {receiptUrl ? (
-        <Card>
+        <Card className="rounded-xl">
           <CardHeader>
             <CardTitle>Receipt</CardTitle>
           </CardHeader>
@@ -125,7 +129,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
       ) : null}
 
       {showReview ? (
-        <Card>
+        <Card className="rounded-xl">
           <CardHeader>
             <CardTitle>Review</CardTitle>
             <CardDescription>Approve, reject, or request changes</CardDescription>
@@ -136,7 +140,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
         </Card>
       ) : null}
 
-      <Card>
+      <Card className="rounded-xl">
         <CardHeader>
           <CardTitle>Comments</CardTitle>
           <CardDescription>Discussion on this expense</CardDescription>

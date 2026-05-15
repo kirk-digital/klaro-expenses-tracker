@@ -1,10 +1,12 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import type { Category } from "@prisma/client";
+import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { ORG_SLUG_HEADER } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,8 +29,10 @@ export function ExpenseCreateForm({
   categories: Category[];
 }) {
   const router = useRouter();
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
   const [categoryId, setCategoryId] = useState<string>(categories[0]?.id ?? "");
+  const [fileName, setFileName] = useState<string | null>(null);
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -59,7 +63,10 @@ export function ExpenseCreateForm({
   }
 
   return (
-    <form className="space-y-4 rounded-lg border bg-card p-6" onSubmit={onSubmit}>
+    <form
+      className="space-y-4 rounded-xl border bg-card p-8 shadow-sm"
+      onSubmit={onSubmit}
+    >
       <div className="space-y-2">
         <Label htmlFor="merchant">Merchant</Label>
         <Input id="merchant" name="merchant" required />
@@ -76,7 +83,13 @@ export function ExpenseCreateForm({
       </div>
       <div className="space-y-2">
         <Label htmlFor="date">Date</Label>
-        <Input id="date" name="date" type="date" required defaultValue={new Date().toISOString().slice(0, 10)} />
+        <Input
+          id="date"
+          name="date"
+          type="date"
+          required
+          defaultValue={new Date().toISOString().slice(0, 10)}
+        />
       </div>
       <div className="space-y-2">
         <Label>Category</Label>
@@ -103,11 +116,46 @@ export function ExpenseCreateForm({
       </div>
       <div className="space-y-2">
         <Label htmlFor="receipt">Receipt</Label>
-        <Input id="receipt" name="receipt" type="file" accept="image/jpeg,image/png,application/pdf" required />
-        <p className="text-xs text-muted-foreground">JPEG, PNG, or PDF · max 10MB</p>
+        <input
+          ref={fileInputRef}
+          id="receipt"
+          name="receipt"
+          type="file"
+          accept="image/jpeg,image/png,application/pdf"
+          required
+          className="sr-only"
+          onChange={(e) => setFileName(e.target.files?.[0]?.name ?? null)}
+        />
+        <button
+          type="button"
+          onClick={() => fileInputRef.current?.click()}
+          className={cn(
+            "flex w-full flex-col items-center justify-center rounded-lg border-2 border-dashed px-4 py-10 text-center transition-colors",
+            "bg-muted/30 text-muted-foreground hover:bg-muted/60"
+          )}
+        >
+          <span className="text-sm font-medium text-foreground">
+            Click to upload or drag and drop
+          </span>
+          <span className="mt-1 text-xs">
+            {fileName ?? "JPEG, PNG, or PDF · max 10MB"}
+          </span>
+        </button>
       </div>
-      <Button type="submit" disabled={loading || categories.length === 0}>
-        {loading ? "Submitting…" : "Submit expense"}
+      <Button
+        type="submit"
+        size="lg"
+        className="w-full"
+        disabled={loading || categories.length === 0}
+      >
+        {loading ? (
+          <>
+            <Loader2 className="animate-spin" />
+            Submitting…
+          </>
+        ) : (
+          "Submit expense"
+        )}
       </Button>
     </form>
   );

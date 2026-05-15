@@ -21,7 +21,12 @@ export default async function OrgLayout({
   }
 
   return (
-    <OrgShell slug={params.slug} orgName={access.organization.name} role={access.role}>
+    <OrgShell
+      slug={params.slug}
+      orgName={access.organization.name}
+      role={access.role}
+      userName={session.user.name ?? session.user.email ?? "User"}
+    >
       {children}
     </OrgShell>
   );

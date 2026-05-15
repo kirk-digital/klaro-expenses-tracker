@@ -53,6 +53,10 @@ async function main() {
     "Software & Subscriptions",
     "Office Supplies",
     "Hardware",
+    "Phone & Utilities",
+    "Marketing & Advertising",
+    "Training & Education",
+    "Professional Services",
     "Other",
   ];
 

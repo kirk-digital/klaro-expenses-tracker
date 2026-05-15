@@ -10,7 +10,8 @@
     "postinstall": "prisma generate",
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
-    "db:seed": "tsx prisma/seed.ts"
+    "db:seed": "tsx prisma/seed.ts",
+    "db:fix-currency": "tsx prisma/scripts/migrate-kirkdale-currency.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
