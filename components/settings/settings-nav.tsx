@@ -26,7 +26,9 @@ export function SettingsNav({ slug, orgType }: { slug: string; orgType: string }
             href={l.href}
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              active ? "bg-muted text-foreground" : "text-muted-foreground hover:bg-muted/60"
+              active
+                ? "border bg-background font-semibold text-foreground shadow-sm"
+                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
             )}
           >
             {l.label}

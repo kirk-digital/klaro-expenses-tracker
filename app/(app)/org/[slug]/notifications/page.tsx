@@ -63,7 +63,7 @@ export default async function NotificationsPage({ params }: Props) {
                 key={n.id}
                 className={cn(
                   "flex items-start gap-3 rounded-lg border bg-card px-4 py-3",
-                  !n.read && "border-l-4 border-l-primary"
+                  !n.read && "border-l-4 border-l-primary bg-primary/5"
                 )}
               >
                 <Bell className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />

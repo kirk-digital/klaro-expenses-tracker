@@ -133,48 +133,54 @@ export default async function DashboardPage({ params }: Props) {
         <p className="text-muted-foreground">Overview for {access.organization.name}</p>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
-        <Card className="rounded-xl border-l-4 border-green-500">
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-1.5">
-              <TrendingUp className="h-3.5 w-3.5 text-green-500" />
-              Approved spend
-            </CardDescription>
-            <CardTitle className="text-3xl font-bold tabular-nums">
-              {formatMoney(totalSpend)}
-            </CardTitle>
-            <p className="text-xs text-muted-foreground">This calendar month</p>
-          </CardHeader>
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <Card className="rounded-xl border border-t-2 border-t-emerald-500 shadow-sm">
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Approved spend
+              </p>
+              <TrendingUp className="h-4 w-4 shrink-0 text-green-500" />
+            </div>
+            <p className="mt-2 text-2xl font-bold tabular-nums">{formatMoney(totalSpend)}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">This month</p>
+          </div>
         </Card>
-        <Card className="rounded-xl border-l-4 border-amber-500">
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5 text-amber-500" />
-              Pending approvals
-            </CardDescription>
-            <CardTitle className="text-3xl font-bold tabular-nums">{pendingApprovals}</CardTitle>
-            <p className="text-xs text-muted-foreground">Awaiting your decision</p>
-          </CardHeader>
+        <Card className="rounded-xl border border-t-2 border-t-amber-500 shadow-sm">
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Pending approvals
+              </p>
+              <Clock className="h-4 w-4 shrink-0 text-amber-500" />
+            </div>
+            <p className="mt-2 text-2xl font-bold tabular-nums">{pendingApprovals}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">Awaiting decision</p>
+          </div>
         </Card>
-        <Card className="rounded-xl border-l-4 border-blue-500">
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-1.5">
-              <CheckCircle className="h-3.5 w-3.5 text-blue-500" />
-              Approved
-            </CardDescription>
-            <CardTitle className="text-3xl font-bold tabular-nums">{approvedCount}</CardTitle>
-            <p className="text-xs text-muted-foreground">Expenses this month</p>
-          </CardHeader>
+        <Card className="rounded-xl border border-t-2 border-t-blue-500 shadow-sm">
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Approved count
+              </p>
+              <CheckCircle className="h-4 w-4 shrink-0 text-blue-500" />
+            </div>
+            <p className="mt-2 text-2xl font-bold tabular-nums">{approvedCount}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">This month</p>
+          </div>
         </Card>
-        <Card className="rounded-xl border-l-4 border-red-500">
-          <CardHeader className="pb-2">
-            <CardDescription className="flex items-center gap-1.5">
-              <XCircle className="h-3.5 w-3.5 text-red-500" />
-              Rejected
-            </CardDescription>
-            <CardTitle className="text-3xl font-bold tabular-nums">{rejectedCount}</CardTitle>
-            <p className="text-xs text-muted-foreground">This calendar month</p>
-          </CardHeader>
+        <Card className="rounded-xl border border-t-2 border-t-red-500 shadow-sm">
+          <div className="p-4">
+            <div className="flex items-center justify-between">
+              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                Rejected count
+              </p>
+              <XCircle className="h-4 w-4 shrink-0 text-red-500" />
+            </div>
+            <p className="mt-2 text-2xl font-bold tabular-nums">{rejectedCount}</p>
+            <p className="mt-0.5 text-xs text-muted-foreground">This month</p>
+          </div>
         </Card>
       </div>
 

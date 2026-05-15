@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState, useTransition } from "react";
+import { Trash2 } from "lucide-react";
 import type { MemberRole, User } from "@prisma/client";
 import { toast } from "sonner";
 import { ORG_SLUG_HEADER } from "@/lib/constants";
@@ -223,7 +224,7 @@ export function MembersPanel({
           <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
-              <TableHead>Email</TableHead>
+              <TableHead className="hidden md:table-cell">Email</TableHead>
               <TableHead>Role</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
@@ -233,8 +234,13 @@ export function MembersPanel({
               const isSelf = m.user.id === currentUserId;
               return (
                 <TableRow key={m.id}>
-                  <TableCell className="font-medium">{m.user.name}</TableCell>
-                  <TableCell>{m.user.email}</TableCell>
+                  <TableCell>
+                    <div>
+                      <p className="text-sm font-medium">{m.user.name}</p>
+                      <p className="text-xs text-muted-foreground md:hidden">{m.user.email}</p>
+                    </div>
+                  </TableCell>
+                  <TableCell className="hidden md:table-cell">{m.user.email}</TableCell>
                   <TableCell>
                     <Select
                       value={m.role}
@@ -259,12 +265,14 @@ export function MembersPanel({
                   <TableCell className="text-right">
                     <Button
                       type="button"
-                      variant="outline"
-                      size="sm"
+                      variant="ghost"
+                      size="icon"
+                      className="h-8 w-8 text-muted-foreground hover:text-destructive"
                       disabled={isSelf}
                       onClick={() => removeMember(m.user.id)}
+                      title="Remove member"
                     >
-                      Remove
+                      <Trash2 className="h-4 w-4" />
                     </Button>
                   </TableCell>
                 </TableRow>
@@ -284,7 +292,7 @@ export function MembersPanel({
                 <TableRow>
                   <TableHead>Email</TableHead>
                   <TableHead>Role</TableHead>
-                  <TableHead>Expires</TableHead>
+                  <TableHead className="hidden md:table-cell">Expires</TableHead>
                   <TableHead className="text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
@@ -297,7 +305,7 @@ export function MembersPanel({
                         {inv.role}
                       </span>
                     </TableCell>
-                    <TableCell className="text-muted-foreground text-sm">
+                    <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
                       {formatExpiry(inv.expiresAt)}
                     </TableCell>
                     <TableCell className="text-right">

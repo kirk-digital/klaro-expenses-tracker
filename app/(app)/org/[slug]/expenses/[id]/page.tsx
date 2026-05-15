@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { format } from "date-fns";
-import { ChevronRight } from "lucide-react";
+import { ChevronLeft } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveOrgAccess } from "@/lib/org";
@@ -57,16 +57,15 @@ export default async function ExpenseDetailPage({ params }: Props) {
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <p className="flex items-center gap-1 text-sm text-muted-foreground">
+          <div className="flex items-center gap-2">
             <Link
               href={`/org/${params.slug}/expenses`}
-              className="transition-colors hover:text-foreground"
+              className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
-              Expenses
+              <ChevronLeft className="h-4 w-4" />
+              <span>Expenses</span>
             </Link>
-            <ChevronRight className="h-3.5 w-3.5" />
-            <span className="text-foreground">{expense.merchant}</span>
-          </p>
+          </div>
           <h1 className="text-2xl font-semibold tracking-tight">{expense.merchant}</h1>
         </div>
         <ExpenseStatusBadge status={expense.status} />

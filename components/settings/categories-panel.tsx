@@ -1,26 +1,32 @@
 "use client";
 
-import { useState, useTransition } from "react";
+import { useMemo, useState, useTransition } from "react";
 import type { Category } from "@prisma/client";
 import { toast } from "sonner";
 import { ORG_SLUG_HEADER } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
 
-export function CategoriesPanel({ slug, initialCategories }: { slug: string; initialCategories: Category[] }) {
+export function CategoriesPanel({
+  slug,
+  initialCategories,
+}: {
+  slug: string;
+  initialCategories: Category[];
+}) {
   const [categories, setCategories] = useState(initialCategories);
   const [name, setName] = useState("");
   const [pending, startTransition] = useTransition();
+
+  const activeCategories = useMemo(
+    () => categories.filter((c) => !c.archived),
+    [categories]
+  );
+  const archivedCategories = useMemo(
+    () => categories.filter((c) => c.archived),
+    [categories]
+  );
 
   const headers = {
     "Content-Type": "application/json",
@@ -85,35 +91,56 @@ export function CategoriesPanel({ slug, initialCategories }: { slug: string; ini
         </Button>
       </form>
 
-      <div className="rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Name</TableHead>
-              <TableHead className="w-40">Archived</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {categories.map((c) => (
-              <TableRow key={c.id} className={c.archived ? "text-muted-foreground" : ""}>
-                <TableCell className="font-medium">{c.name}</TableCell>
-                <TableCell>
-                  <div className="flex items-center gap-2">
-                    <Checkbox
-                      checked={c.archived}
-                      onCheckedChange={(v) => toggleArchived(c.id, Boolean(v))}
-                      id={`arch-${c.id}`}
-                    />
-                    <Label htmlFor={`arch-${c.id}`} className="text-sm font-normal">
-                      Archived
-                    </Label>
-                  </div>
-                </TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+      <div className="space-y-1">
+        {activeCategories.length === 0 ? (
+          <p className="text-sm text-muted-foreground">No active categories.</p>
+        ) : (
+          activeCategories.map((c) => (
+            <div
+              key={c.id}
+              className="flex items-center justify-between rounded-lg border bg-card px-3 py-2.5"
+            >
+              <p className="text-sm font-medium">{c.name}</p>
+              <Button
+                type="button"
+                variant="ghost"
+                size="sm"
+                className="h-7 text-xs text-muted-foreground hover:text-destructive"
+                onClick={() => toggleArchived(c.id, true)}
+              >
+                Archive
+              </Button>
+            </div>
+          ))
+        )}
       </div>
+
+      {archivedCategories.length > 0 && (
+        <div className="mt-6">
+          <p className="mb-2 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+            Archived
+          </p>
+          <div className="space-y-1">
+            {archivedCategories.map((c) => (
+              <div
+                key={c.id}
+                className="flex items-center justify-between rounded-lg border bg-muted/30 px-3 py-2"
+              >
+                <p className="text-sm text-muted-foreground line-through">{c.name}</p>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="h-7 text-xs"
+                  onClick={() => toggleArchived(c.id, false)}
+                >
+                  Restore
+                </Button>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   );
 }
