@@ -62,7 +62,21 @@ function SignInForm() {
         <CardDescription>Access your organisation workspace.</CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            const fd = new FormData(e.currentTarget);
+            const fields = ["email", "password"] as const;
+            fields.forEach((key) => {
+              const val = fd.get(key);
+              if (typeof val === "string") {
+                form.setValue(key, val, { shouldValidate: false, shouldDirty: true });
+              }
+            });
+            form.handleSubmit(onSubmit)();
+          }}
+        >
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
             <Input id="email" type="email" autoComplete="email" {...form.register("email")} />

@@ -147,7 +147,23 @@ function SignUpForm() {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <form className="space-y-4" onSubmit={form.handleSubmit(onSubmit)}>
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault();
+            // iOS Safari autofill bypasses React's synthetic events entirely.
+            // Read real DOM values via FormData before RHF validation runs.
+            const fd = new FormData(e.currentTarget);
+            const fields = ["name", "email", "password", "confirmPassword"] as const;
+            fields.forEach((key) => {
+              const val = fd.get(key);
+              if (typeof val === "string") {
+                form.setValue(key, val, { shouldValidate: false, shouldDirty: true });
+              }
+            });
+            form.handleSubmit(onSubmit)();
+          }}
+        >
           <div className="space-y-2">
             <Label htmlFor="name">Full name</Label>
             <Input id="name" {...form.register("name")} />
