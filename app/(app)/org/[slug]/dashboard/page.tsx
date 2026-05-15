@@ -154,54 +154,62 @@ export default async function DashboardPage({ params }: Props) {
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
-        <Card className="rounded-xl border border-t-2 border-t-emerald-500 shadow-sm">
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Approved spend
-              </p>
-              <TrendingUp className="h-4 w-4 shrink-0 text-green-500" />
+        <Link href={`/org/${params.slug}/expenses?status=approved`}>
+          <Card className="cursor-pointer rounded-xl border border-t-2 border-t-emerald-500 shadow-sm transition-colors hover:bg-muted/40">
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Approved spend
+                </p>
+                <TrendingUp className="h-4 w-4 shrink-0 text-green-500" />
+              </div>
+              <p className="mt-2 text-2xl font-bold tabular-nums">{formatMoney(totalSpend)}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">This month</p>
             </div>
-            <p className="mt-2 text-2xl font-bold tabular-nums">{formatMoney(totalSpend)}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">This month</p>
-          </div>
-        </Card>
-        <Card className="rounded-xl border border-t-2 border-t-amber-500 shadow-sm">
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Pending approvals
-              </p>
-              <Clock className="h-4 w-4 shrink-0 text-amber-500" />
+          </Card>
+        </Link>
+        <Link href={`/org/${params.slug}/approvals`}>
+          <Card className="cursor-pointer rounded-xl border border-t-2 border-t-amber-500 shadow-sm transition-colors hover:bg-muted/40">
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Pending approvals
+                </p>
+                <Clock className="h-4 w-4 shrink-0 text-amber-500" />
+              </div>
+              <p className="mt-2 text-2xl font-bold tabular-nums">{pendingApprovals}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">Awaiting decision</p>
             </div>
-            <p className="mt-2 text-2xl font-bold tabular-nums">{pendingApprovals}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">Awaiting decision</p>
-          </div>
-        </Card>
-        <Card className="rounded-xl border border-t-2 border-t-blue-500 shadow-sm">
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Approved count
-              </p>
-              <CheckCircle className="h-4 w-4 shrink-0 text-blue-500" />
+          </Card>
+        </Link>
+        <Link href={`/org/${params.slug}/expenses?status=approved`}>
+          <Card className="cursor-pointer rounded-xl border border-t-2 border-t-blue-500 shadow-sm transition-colors hover:bg-muted/40">
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Approved count
+                </p>
+                <CheckCircle className="h-4 w-4 shrink-0 text-blue-500" />
+              </div>
+              <p className="mt-2 text-2xl font-bold tabular-nums">{approvedCount}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">This month</p>
             </div>
-            <p className="mt-2 text-2xl font-bold tabular-nums">{approvedCount}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">This month</p>
-          </div>
-        </Card>
-        <Card className="rounded-xl border border-t-2 border-t-red-500 shadow-sm">
-          <div className="p-4">
-            <div className="flex items-center justify-between">
-              <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                Rejected count
-              </p>
-              <XCircle className="h-4 w-4 shrink-0 text-red-500" />
+          </Card>
+        </Link>
+        <Link href={`/org/${params.slug}/expenses?status=rejected`}>
+          <Card className="cursor-pointer rounded-xl border border-t-2 border-t-red-500 shadow-sm transition-colors hover:bg-muted/40">
+            <div className="p-4">
+              <div className="flex items-center justify-between">
+                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                  Rejected count
+                </p>
+                <XCircle className="h-4 w-4 shrink-0 text-red-500" />
+              </div>
+              <p className="mt-2 text-2xl font-bold tabular-nums">{rejectedCount}</p>
+              <p className="mt-0.5 text-xs text-muted-foreground">This month</p>
             </div>
-            <p className="mt-2 text-2xl font-bold tabular-nums">{rejectedCount}</p>
-            <p className="mt-0.5 text-xs text-muted-foreground">This month</p>
-          </div>
-        </Card>
+          </Card>
+        </Link>
       </div>
 
       {org.type === "charity" && fundBreakdown.length > 0 && (
