@@ -96,7 +96,7 @@ export async function POST(request: Request) {
       submittedById: org.userId,
       categoryId,
       amount,
-      currency: org.organization.currency,
+      currency: "GBP",
       merchant,
       date,
       notes,

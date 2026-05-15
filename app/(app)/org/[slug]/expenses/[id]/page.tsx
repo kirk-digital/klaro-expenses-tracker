@@ -78,7 +78,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
           <div>
             <p className="text-muted-foreground">Amount</p>
             <p className="text-lg font-semibold tabular-nums">
-              {formatMoney(Number(expense.amount), expense.currency)}
+              {formatMoney(Number(expense.amount))}
             </p>
           </div>
           <div>

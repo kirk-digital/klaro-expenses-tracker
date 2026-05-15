@@ -25,6 +25,6 @@ export default async function OrgSettingsPage({ params }: Props) {
   if (!org) redirect("/sign-in");
 
   return (
-    <OrgSettingsForm slug={params.slug} initialName={org.name} initialCurrency={org.currency} />
+    <OrgSettingsForm slug={params.slug} initialName={org.name} />
   );
 }

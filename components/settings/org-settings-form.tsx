@@ -11,11 +11,9 @@ import { Label } from "@/components/ui/label";
 export function OrgSettingsForm({
   slug,
   initialName,
-  initialCurrency,
 }: {
   slug: string;
   initialName: string;
-  initialCurrency: string;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -39,25 +37,13 @@ export function OrgSettingsForm({
     <Card className="max-w-lg">
       <CardHeader>
         <CardTitle>Organisation</CardTitle>
-        <CardDescription>Display name and default currency for new expenses</CardDescription>
+        <CardDescription>Display name for your organisation</CardDescription>
       </CardHeader>
       <CardContent>
         <form className="space-y-4" onSubmit={onSubmit}>
           <div className="space-y-2">
             <Label htmlFor="name">Name</Label>
             <Input id="name" name="name" required defaultValue={initialName} />
-          </div>
-          <div className="space-y-2">
-            <Label htmlFor="currency">Currency (ISO code)</Label>
-            <Input
-              id="currency"
-              name="currency"
-              required
-              minLength={3}
-              maxLength={3}
-              defaultValue={initialCurrency}
-              className="uppercase"
-            />
           </div>
           {error ? <p className="text-sm text-destructive">{error}</p> : null}
           <Button type="submit" disabled={pending}>

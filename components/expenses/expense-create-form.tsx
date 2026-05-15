@@ -21,11 +21,9 @@ import {
 
 export function ExpenseCreateForm({
   slug,
-  currency,
   categories,
 }: {
   slug: string;
-  currency: string;
   categories: Category[];
 }) {
   const router = useRouter();
@@ -71,14 +69,21 @@ export function ExpenseCreateForm({
         <Label htmlFor="merchant">Merchant</Label>
         <Input id="merchant" name="merchant" required />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="space-y-2">
-          <Label htmlFor="amount">Amount</Label>
-          <Input id="amount" name="amount" type="number" step="0.01" min="0.01" required />
-        </div>
-        <div className="space-y-2">
-          <Label>Currency</Label>
-          <Input readOnly value={currency} className="bg-muted" />
+      <div className="space-y-2">
+        <Label htmlFor="amount">Amount</Label>
+        <div className="relative">
+          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+            £
+          </span>
+          <Input
+            id="amount"
+            name="amount"
+            type="number"
+            step="0.01"
+            min="0.01"
+            required
+            className="pl-7"
+          />
         </div>
       </div>
       <div className="space-y-2">

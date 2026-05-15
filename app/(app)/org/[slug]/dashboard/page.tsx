@@ -139,7 +139,7 @@ export default async function DashboardPage({ params }: Props) {
             <TrendingUp className="absolute right-4 top-4 h-5 w-5 text-green-500" />
             <CardDescription>Approved spend (this month)</CardDescription>
             <CardTitle className="text-3xl font-bold">
-              {formatMoney(totalSpend, currency)}
+              {formatMoney(totalSpend)}
             </CardTitle>
           </CardHeader>
         </Card>
@@ -205,7 +205,7 @@ export default async function DashboardPage({ params }: Props) {
                     </p>
                   </div>
                   <span className="font-medium tabular-nums">
-                    {formatMoney(Number(e.amount), e.currency)}
+                    {formatMoney(Number(e.amount))}
                   </span>
                 </Link>
               ))}
@@ -268,7 +268,7 @@ export default async function DashboardPage({ params }: Props) {
                       </span>
                     </TableCell>
                     <TableCell className="text-right tabular-nums">
-                      {formatMoney(Number(e.amount), e.currency)}
+                      {formatMoney(Number(e.amount))}
                     </TableCell>
                     <TableCell>{format(e.date, "MMM d, yyyy")}</TableCell>
                     <TableCell>

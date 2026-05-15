@@ -63,7 +63,7 @@ export function ExpensesTable({
                 </span>
               </TableCell>
               <TableCell className="text-right tabular-nums">
-                {formatMoney(Number(e.amount), e.currency)}
+                {formatMoney(Number(e.amount))}
               </TableCell>
               <TableCell>{format(new Date(e.date), "MMM d, yyyy")}</TableCell>
               <TableCell>

@@ -76,14 +76,13 @@ export async function updateOrganizationAction(
   }
 
   const name = String(formData.get("name") ?? "").trim();
-  const currency = String(formData.get("currency") ?? "").trim().toUpperCase();
-  if (!name || currency.length !== 3) {
-    return { error: "Enter a valid organisation name and 3-letter currency code" };
+  if (!name) {
+    return { error: "Enter a valid organisation name" };
   }
 
   await prisma.organization.update({
     where: { id: access.organization.id },
-    data: { name, currency },
+    data: { name },
   });
 
   return {};
