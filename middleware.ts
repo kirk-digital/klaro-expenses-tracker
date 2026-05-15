@@ -12,9 +12,18 @@ const secret = () => process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
  */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
+  // Auth.js v5 changed the cookie name from "next-auth.session-token" to
+  // "authjs.session-token" (and "__Secure-authjs.session-token" on HTTPS).
+  // getToken() defaults to the v4 name, so we must pass the correct name explicitly.
+  const isProd = process.env.NODE_ENV === "production";
+  const cookieName = isProd
+    ? "__Secure-authjs.session-token"
+    : "authjs.session-token";
+
   const token = await getToken({
     req: request,
     secret: secret(),
+    cookieName,
   });
 
   const isApiAuth = pathname.startsWith("/api/auth");
