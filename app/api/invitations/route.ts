@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { MemberRole } from "@prisma/client";
-import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { requireOrgFromRequest } from "@/lib/api-helpers";
 import { requireOrgMember, canManageMembers } from "@/lib/permissions";
+import { sendInviteEmail } from "@/lib/email";
 
 export async function GET(request: Request) {
   const url = new URL(request.url);
@@ -22,6 +22,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       email: invitation.email,
       role: invitation.role,
+      orgName: invitation.organization.name,
       organizationName: invitation.organization.name,
       organizationSlug: invitation.organization.slug,
     });
@@ -48,57 +49,6 @@ export async function GET(request: Request) {
 }
 
 export async function POST(request: Request) {
-  const body = (await request.json()) as { accept?: boolean; token?: string };
-
-  if (body.accept && body.token) {
-    const session = await auth();
-    const userId = session?.user?.id;
-    const email = session?.user?.email?.toLowerCase();
-    if (!userId || !email) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
-    }
-
-    const invitation = await prisma.invitation.findFirst({
-      where: { token: body.token, acceptedAt: null, expiresAt: { gt: new Date() } },
-    });
-
-    if (!invitation) {
-      return NextResponse.json({ error: "Invalid or expired invitation" }, { status: 404 });
-    }
-
-    if (invitation.email.toLowerCase() !== email) {
-      return NextResponse.json({ error: "Signed-in user does not match invitation email" }, { status: 403 });
-    }
-
-    const existing = await prisma.organizationMember.findFirst({
-      where: { organizationId: invitation.organizationId, userId },
-    });
-
-    if (existing) {
-      await prisma.invitation.update({
-        where: { id: invitation.id },
-        data: { acceptedAt: new Date() },
-      });
-      return NextResponse.json({ ok: true, alreadyMember: true });
-    }
-
-    await prisma.$transaction([
-      prisma.organizationMember.create({
-        data: {
-          organizationId: invitation.organizationId,
-          userId,
-          role: invitation.role,
-        },
-      }),
-      prisma.invitation.update({
-        where: { id: invitation.id },
-        data: { acceptedAt: new Date() },
-      }),
-    ]);
-
-    return NextResponse.json({ ok: true });
-  }
-
   const org = await requireOrgFromRequest(request);
   if (org instanceof Response) return org;
 
@@ -107,9 +57,9 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const createBody = body as { email?: string; role?: MemberRole };
-  const email = createBody.email?.trim().toLowerCase();
-  const role = createBody.role;
+  const body = (await request.json()) as { email?: string; role?: MemberRole };
+  const email = body.email?.trim().toLowerCase();
+  const role = body.role;
 
   if (!email || !role || !Object.values(MemberRole).includes(role)) {
     return NextResponse.json({ error: "Invalid payload" }, { status: 400 });
@@ -131,7 +81,24 @@ export async function POST(request: Request) {
     process.env.NEXTAUTH_URL?.replace(/\/$/, "") ??
     (process.env.VERCEL_URL ? `https://${process.env.VERCEL_URL}` : "http://localhost:3000");
 
-  const inviteUrl = `${base}/sign-up?invite=${invitation.token}`;
+  const inviteUrl = `${base}/sign-up?token=${invitation.token}`;
+
+  const inviter = await prisma.user.findUnique({
+    where: { id: org.userId },
+    select: { name: true },
+  });
+
+  try {
+    await sendInviteEmail({
+      to: email,
+      inviterName: inviter?.name ?? "A teammate",
+      orgName: org.organization.name,
+      inviteUrl,
+      role,
+    });
+  } catch (e) {
+    console.error("[invitations] Failed to send invite email", e);
+  }
 
   return NextResponse.json({ invitation, inviteUrl });
 }

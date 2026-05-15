@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import { compare } from "bcryptjs";
+import bcrypt from "bcryptjs";
 import { prisma } from "./prisma";
 
 const secret = process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
@@ -10,6 +10,7 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   secret,
   pages: {
     signIn: "/sign-in",
+    newUser: "/onboarding",
   },
   session: {
     strategy: "jwt",
@@ -22,21 +23,33 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         password: { label: "Password", type: "password" },
       },
       async authorize(credentials) {
-        const email = credentials?.email as string | undefined;
-        const password = credentials?.password as string | undefined;
-        if (!email || !password) return null;
-        const user = await prisma.user.findUnique({ where: { email } });
+        if (!credentials?.email || !credentials?.password) return null;
+
+        const email = String(credentials.email).trim().toLowerCase();
+        const password = String(credentials.password);
+
+        const user = await prisma.user.findUnique({
+          where: { email },
+        });
+
         if (!user) return null;
-        const ok = await compare(password, user.passwordHash);
-        if (!ok) return null;
-        return { id: user.id, name: user.name, email: user.email };
+
+        const passwordMatch = await bcrypt.compare(password, user.passwordHash);
+
+        if (!passwordMatch) return null;
+
+        return {
+          id: user.id,
+          name: user.name,
+          email: user.email,
+        };
       },
     }),
   ],
   callbacks: {
     async jwt({ token, user, trigger, session }) {
       if (user) {
-        token.userId = user.id;
+        token.id = user.id;
       }
       if (trigger === "update" && session && typeof session === "object" && "orgSlug" in session) {
         token.orgSlug = (session as { orgSlug?: string }).orgSlug;
@@ -44,8 +57,8 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       return token;
     },
     async session({ session, token }) {
-      if (session.user && token.userId) {
-        session.user.id = token.userId as string;
+      if (token?.id) {
+        session.user.id = token.id as string;
       }
       if (session.user && token.orgSlug) {
         session.user.orgSlug = token.orgSlug as string;

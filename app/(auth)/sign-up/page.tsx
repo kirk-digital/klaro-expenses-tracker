@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useState } from "react";
+import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { signIn } from "next-auth/react";
@@ -15,14 +15,16 @@ import { Label } from "@/components/ui/label";
 
 const schema = z
   .object({
-    name: z.string().min(2, "Enter your name"),
-    email: z.string().email(),
+    name: z.string().refine((s) => s.trim().length >= 2, {
+      message: "Enter your name",
+    }),
+    email: z.string().email("Enter a valid email address"),
     password: z.string().min(8, "At least 8 characters"),
-    confirm: z.string(),
+    confirmPassword: z.string(),
   })
-  .refine((data) => data.password === data.confirm, {
+  .refine((data) => data.password === data.confirmPassword, {
     message: "Passwords do not match",
-    path: ["confirm"],
+    path: ["confirmPassword"],
   });
 
 type Form = z.infer<typeof schema>;
@@ -30,9 +32,45 @@ type Form = z.infer<typeof schema>;
 function SignUpForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const invite = searchParams.get("invite");
+  const inviteToken = searchParams.get("token") ?? searchParams.get("invite");
   const [loading, setLoading] = useState(false);
-  const form = useForm<Form>({ resolver: zodResolver(schema) });
+  const [inviteEmailLocked, setInviteEmailLocked] = useState(false);
+
+  const form = useForm<Form>({
+    resolver: zodResolver(schema),
+    mode: "onTouched",
+    defaultValues: {
+      name: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  const { setValue } = form;
+
+  useEffect(() => {
+    if (!inviteToken) return;
+
+    let cancelled = false;
+    (async () => {
+      const res = await fetch(`/api/invitations?token=${encodeURIComponent(inviteToken)}`);
+      const data = await res.json().catch(() => ({}));
+      if (cancelled) return;
+      if (!res.ok) {
+        toast.error(typeof data.error === "string" ? data.error : "Invalid invitation link");
+        return;
+      }
+      if (typeof data.email === "string") {
+        setValue("email", data.email);
+        setInviteEmailLocked(true);
+      }
+    })();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [inviteToken, setValue]);
 
   async function onSubmit(values: Form) {
     setLoading(true);
@@ -41,43 +79,57 @@ function SignUpForm() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: values.name,
-          email: values.email,
+          name: values.name.trim(),
+          email: values.email.trim().toLowerCase(),
           password: values.password,
         }),
       });
       const data = await reg.json().catch(() => ({}));
       if (!reg.ok) {
-        toast.error(data.error || "Could not create account");
+        const field = data.field as keyof Form | undefined;
+        const fieldKeys: (keyof Form)[] = ["name", "email", "password", "confirmPassword"];
+        if (field && fieldKeys.includes(field) && typeof data.error === "string") {
+          form.setError(field, { message: data.error });
+        } else {
+          toast.error(typeof data.error === "string" ? data.error : "Could not create account");
+        }
         return;
       }
 
-      const sign = await signIn("credentials", {
-        email: values.email,
-        password: values.password,
-        redirect: false,
-      });
-      if (sign?.error) {
-        toast.error("Account created but sign-in failed. Try signing in manually.");
-        router.push("/sign-in");
-        return;
+      if (!data.signedIn) {
+        const sign = await signIn("credentials", {
+          email: values.email.trim().toLowerCase(),
+          password: values.password,
+          redirect: false,
+        });
+        if (sign?.error) {
+          toast.error("Account created but sign-in failed. Try signing in manually.");
+          router.push("/sign-in");
+          return;
+        }
       }
 
-      if (invite) {
-        const accept = await fetch("/api/invitations", {
+      let nextPath = "/onboarding";
+
+      if (inviteToken) {
+        const accept = await fetch("/api/invitations/accept", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ accept: true, token: invite }),
+          body: JSON.stringify({ token: inviteToken }),
         });
         if (!accept.ok) {
           const err = await accept.json().catch(() => ({}));
-          toast.error(err.error || "Could not accept invitation");
+          toast.error(typeof err.error === "string" ? err.error : "Could not accept invitation");
         } else {
+          const acceptData = await accept.json().catch(() => ({}));
+          if (typeof acceptData.orgSlug === "string") {
+            nextPath = `/org/${acceptData.orgSlug}/dashboard`;
+          }
           toast.success("You have joined the organisation");
         }
       }
 
-      router.push("/onboarding");
+      router.push(nextPath);
       router.refresh();
     } finally {
       setLoading(false);
@@ -89,7 +141,7 @@ function SignUpForm() {
       <CardHeader>
         <CardTitle>Create account</CardTitle>
         <CardDescription>
-          {invite
+          {inviteToken
             ? "Finish registration to accept your invitation."
             : "Start tracking expenses for your team."}
         </CardDescription>
@@ -105,23 +157,35 @@ function SignUpForm() {
           </div>
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" autoComplete="email" {...form.register("email")} />
+            <Input
+              id="email"
+              type="email"
+              autoComplete="email"
+              readOnly={inviteEmailLocked}
+              className={inviteEmailLocked ? "bg-muted" : undefined}
+              {...form.register("email")}
+            />
             {form.formState.errors.email && (
               <p className="text-sm text-destructive">{form.formState.errors.email.message}</p>
             )}
           </div>
           <div className="space-y-2">
             <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" {...form.register("password")} />
+            <Input id="password" type="password" autoComplete="new-password" {...form.register("password")} />
             {form.formState.errors.password && (
               <p className="text-sm text-destructive">{form.formState.errors.password.message}</p>
             )}
           </div>
           <div className="space-y-2">
-            <Label htmlFor="confirm">Confirm password</Label>
-            <Input id="confirm" type="password" {...form.register("confirm")} />
-            {form.formState.errors.confirm && (
-              <p className="text-sm text-destructive">{form.formState.errors.confirm.message}</p>
+            <Label htmlFor="confirmPassword">Confirm password</Label>
+            <Input
+              id="confirmPassword"
+              type="password"
+              autoComplete="new-password"
+              {...form.register("confirmPassword")}
+            />
+            {form.formState.errors.confirmPassword && (
+              <p className="text-sm text-destructive">{form.formState.errors.confirmPassword.message}</p>
             )}
           </div>
           <Button type="submit" className="w-full" disabled={loading}>

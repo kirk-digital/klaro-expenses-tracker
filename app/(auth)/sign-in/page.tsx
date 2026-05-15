@@ -33,13 +33,13 @@ function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const form = useForm<Form>({ resolver: zodResolver(schema) });
+  const form = useForm<Form>({ resolver: zodResolver(schema), mode: "onTouched" });
 
   async function onSubmit(values: Form) {
     setLoading(true);
     try {
       const res = await signIn("credentials", {
-        email: values.email,
+        email: values.email.trim().toLowerCase(),
         password: values.password,
         redirect: false,
       });

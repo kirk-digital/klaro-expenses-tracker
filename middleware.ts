@@ -5,6 +5,11 @@ import { ORG_SLUG_HEADER } from "@/lib/constants";
 
 const secret = () => process.env.AUTH_SECRET ?? process.env.NEXTAUTH_SECRET;
 
+/**
+ * Edge middleware cannot import `lib/auth` because the credentials provider pulls in
+ * bcryptjs (Node-only). Session checks use JWT via getToken instead of the Auth.js
+ * middleware wrapper.
+ */
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const token = await getToken({
@@ -26,9 +31,9 @@ export async function middleware(request: NextRequest) {
   const isAppArea = pathname.startsWith("/onboarding") || pathname.startsWith("/org");
 
   if (isAppArea && !token) {
-    const signIn = new URL("/sign-in", request.url);
-    signIn.searchParams.set("callbackUrl", pathname);
-    return NextResponse.redirect(signIn);
+    const signInUrl = new URL("/sign-in", request.url);
+    signInUrl.searchParams.set("callbackUrl", pathname);
+    return NextResponse.redirect(signInUrl);
   }
 
   if (isAuthPage && token) {
@@ -53,5 +58,5 @@ export async function middleware(request: NextRequest) {
 }
 
 export const config = {
-  matcher: ["/((?!_next/static|_next/image).*)"],
+  matcher: ["/((?!_next/static|_next/image|favicon.ico).*)"],
 };
