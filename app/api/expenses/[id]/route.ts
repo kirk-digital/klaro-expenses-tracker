@@ -3,6 +3,7 @@ import { ExpenseStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireOrgFromRequest } from "@/lib/api-helpers";
 import { requireOrgMember, canApprove, canViewAllExpenses } from "@/lib/permissions";
+import { sendStatusChangeEmail } from "@/lib/email";
 
 type Params = { params: { id: string } };
 
@@ -68,6 +69,10 @@ export async function PATCH(request: Request, context: Params) {
 
   const expense = await prisma.expense.findFirst({
     where: { id, organizationId: org.organization.id },
+    include: {
+      submittedBy: { select: { id: true, name: true, email: true } },
+      organization: { select: { slug: true } },
+    },
   });
 
   if (!expense) {
@@ -111,6 +116,27 @@ export async function PATCH(request: Request, context: Params) {
 
     return next;
   });
+
+  if (
+    expense.submittedById !== org.userId &&
+    (body.status === ExpenseStatus.approved ||
+      body.status === ExpenseStatus.rejected ||
+      body.status === ExpenseStatus.needs_revision)
+  ) {
+    try {
+      const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
+      await sendStatusChangeEmail({
+        to: expense.submittedBy.email,
+        submitterName: expense.submittedBy.name ?? "there",
+        merchant: expense.merchant ?? "your expense",
+        status: body.status,
+        comment: body.comment ?? null,
+        expenseUrl: `${baseUrl}/org/${expense.organization.slug}/expenses/${expense.id}`,
+      });
+    } catch (emailErr) {
+      console.error("Status-change email failed:", emailErr);
+    }
+  }
 
   return NextResponse.json({
     ...updated,

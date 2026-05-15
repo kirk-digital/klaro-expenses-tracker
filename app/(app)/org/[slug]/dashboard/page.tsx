@@ -125,6 +125,26 @@ export default async function DashboardPage({ params }: Props) {
 
   const totalSpend = Number(approvedThisMonth._sum.amount ?? 0);
   const currency = access.organization.currency;
+  const org = access.organization;
+
+  const fundBreakdown =
+    org.type === "charity"
+      ? await prisma.$queryRaw<
+          { fundType: string; fundName: string | null; total: number }[]
+        >`
+        SELECT
+          e."fundType",
+          f.name AS "fundName",
+          COALESCE(SUM(e.amount), 0)::float AS total
+        FROM "Expense" e
+        LEFT JOIN "Fund" f ON f.id = e."fundId"
+        WHERE e."organizationId" = ${orgId}
+          AND e.status = 'approved'
+          AND e."fundType" IS NOT NULL
+        GROUP BY e."fundType", f.name
+        ORDER BY e."fundType" DESC, f.name ASC
+      `
+      : [];
 
   return (
     <div className="space-y-8">
@@ -183,6 +203,55 @@ export default async function DashboardPage({ params }: Props) {
           </div>
         </Card>
       </div>
+
+      {org.type === "charity" && fundBreakdown.length > 0 && (
+        <div className="rounded-xl border bg-card shadow-sm">
+          <div className="border-b px-5 py-3">
+            <h2 className="text-sm font-semibold">Fund breakdown</h2>
+            <p className="mt-0.5 text-xs text-muted-foreground">
+              Approved spend by fund (all time)
+            </p>
+          </div>
+          <div className="divide-y">
+            {fundBreakdown
+              .filter((f) => f.fundType === "restricted")
+              .map((f) => (
+                <div
+                  key={`restricted-${f.fundName}`}
+                  className="flex items-center justify-between px-5 py-3"
+                >
+                  <div>
+                    <p className="text-sm font-medium">{f.fundName ?? "Unnamed fund"}</p>
+                    <span className="mt-0.5 inline-flex items-center rounded-full border border-amber-200 bg-amber-50 px-2 py-0.5 text-[11px] font-medium text-amber-700">
+                      Restricted
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold tabular-nums">
+                    {formatMoney(f.total)}
+                  </p>
+                </div>
+              ))}
+            {fundBreakdown
+              .filter((f) => f.fundType === "unrestricted")
+              .map((f) => (
+                <div
+                  key="unrestricted"
+                  className="flex items-center justify-between px-5 py-3"
+                >
+                  <div>
+                    <p className="text-sm font-medium">Unrestricted</p>
+                    <span className="mt-0.5 inline-flex items-center rounded-full border border-slate-200 bg-slate-50 px-2 py-0.5 text-[11px] font-medium text-slate-600">
+                      Unrestricted
+                    </span>
+                  </div>
+                  <p className="text-sm font-semibold tabular-nums">
+                    {formatMoney(f.total)}
+                  </p>
+                </div>
+              ))}
+          </div>
+        </div>
+      )}
 
       <div className="grid gap-8 lg:grid-cols-2">
         <Card className="rounded-xl lg:col-span-1">
