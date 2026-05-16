@@ -16,14 +16,11 @@ export function OrgShell({
   userName: string;
   children: React.ReactNode;
 }) {
-  const sidebarClass = "bg-[#0F2057] text-white";
-
   return (
     <div className="flex min-h-screen bg-background">
       <aside
         className={cn(
-          "hidden w-56 shrink-0 border-r border-[#1a3070] p-4 md:block",
-          sidebarClass
+          "hidden md:flex w-56 shrink-0 flex-col sticky top-0 h-screen overflow-y-auto border-r border-[#1a3070] p-4 bg-[#0F2057] text-white"
         )}
       >
         <SidebarContent slug={slug} orgName={orgName} role={role} userName={userName} />

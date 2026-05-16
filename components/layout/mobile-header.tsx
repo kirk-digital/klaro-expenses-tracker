@@ -21,7 +21,7 @@ export function MobileHeader({
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="flex items-center gap-3 border-b border-[#1a3070] bg-[#0F2057] px-4 py-3 md:hidden">
+    <header className="sticky top-0 z-50 flex items-center gap-3 border-b border-[#1a3070] bg-[#0F2057] px-4 py-3 md:hidden backdrop-blur-sm">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger
           className={buttonVariants({
