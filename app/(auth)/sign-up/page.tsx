@@ -41,7 +41,8 @@ function SignUpForm() {
 
   const form = useForm<Form>({
     resolver: zodResolver(schema),
-    mode: "onTouched",
+    mode: "onSubmit",
+    reValidateMode: "onChange",
     defaultValues: {
       name: "",
       email: "",
