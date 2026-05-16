@@ -164,64 +164,66 @@ export function MembersPanel({
   }
 
   return (
-    <div className="space-y-8">
-      {/* Header + Invite button */}
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <p className="text-sm text-muted-foreground">
-          Manage who has access to this organisation.
-        </p>
-        <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
-          <DialogTrigger className={buttonVariants()}>
-            Invite member
-          </DialogTrigger>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Invite by email</DialogTitle>
-              <DialogDescription>
-                They will receive an email with a sign-up link tied to their role.
-              </DialogDescription>
-            </DialogHeader>
-            <form className="space-y-4" onSubmit={invite}>
-              <div className="space-y-2">
-                <Label htmlFor="invite-email">Email</Label>
-                <Input
-                  id="invite-email"
-                  type="email"
-                  required
-                  value={inviteEmail}
-                  onChange={(e) => setInviteEmail(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Role</Label>
-                <Select
-                  value={inviteRole}
-                  onValueChange={(v) => v && setInviteRole(v as MemberRole)}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {roles.map((r) => (
-                      <SelectItem key={r} value={r}>
-                        {r}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button type="submit" disabled={pending}>
-                Send invitation
-              </Button>
-            </form>
-          </DialogContent>
-        </Dialog>
-      </div>
+    <div className="space-y-6">
+      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+        <div className="flex items-center justify-between border-b border-slate-100 px-6 py-4">
+          <div>
+            <h2 className="text-sm font-semibold text-[#1E3A8A]">Members</h2>
+            <p className="mt-0.5 text-xs text-slate-400">
+              Manage who has access to this organisation
+            </p>
+          </div>
+          <Dialog open={inviteOpen} onOpenChange={setInviteOpen}>
+            <DialogTrigger className={buttonVariants({ size: "sm" })}>
+              Invite member
+            </DialogTrigger>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Invite by email</DialogTitle>
+                <DialogDescription>
+                  They will receive an email with a sign-up link tied to their role.
+                </DialogDescription>
+              </DialogHeader>
+              <form className="space-y-4" onSubmit={invite}>
+                <div className="space-y-2">
+                  <Label htmlFor="invite-email">Email</Label>
+                  <Input
+                    id="invite-email"
+                    type="email"
+                    required
+                    value={inviteEmail}
+                    onChange={(e) => setInviteEmail(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Role</Label>
+                  <Select
+                    value={inviteRole}
+                    onValueChange={(v) => v && setInviteRole(v as MemberRole)}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {roles.map((r) => (
+                        <SelectItem key={r} value={r}>
+                          {r}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Button type="submit" disabled={pending}>
+                  Send invitation
+                </Button>
+              </form>
+            </DialogContent>
+          </Dialog>
+        </div>
 
-      {/* Active members table */}
-      <div className="rounded-lg border bg-card">
-        <Table>
-          <TableHeader>
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
             <TableRow>
               <TableHead>Name</TableHead>
               <TableHead className="hidden md:table-cell">Email</TableHead>
@@ -279,14 +281,16 @@ export function MembersPanel({
               );
             })}
           </TableBody>
-        </Table>
+          </Table>
+        </div>
       </div>
 
-      {/* Pending invitations */}
       {invitations.length > 0 && (
-        <div className="space-y-3">
-          <h3 className="text-sm font-medium">Pending invitations</h3>
-          <div className="rounded-lg border bg-card">
+        <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+          <div className="border-b border-slate-100 px-6 py-3.5">
+            <h3 className="text-sm font-semibold text-[#1E3A8A]">Pending invitations</h3>
+          </div>
+          <div className="overflow-x-auto">
             <Table>
               <TableHeader>
                 <TableRow>

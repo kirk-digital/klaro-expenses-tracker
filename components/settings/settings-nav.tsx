@@ -4,9 +4,15 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 
+const baseClass =
+  "relative pb-3 text-sm font-medium transition-colors whitespace-nowrap";
+const activeClass =
+  "text-[#1E3A8A] after:absolute after:inset-x-0 after:bottom-0 after:h-0.5 after:rounded-full after:bg-cyan-400";
+const inactiveClass = "text-slate-500 hover:text-slate-800";
+
 export function SettingsNav({ slug, orgType }: { slug: string; orgType: string }) {
   const pathname = usePathname();
-  const links = [
+  const tabs = [
     { href: `/org/${slug}/settings`, label: "General" },
     { href: `/org/${slug}/settings/members`, label: "Members" },
     { href: `/org/${slug}/settings/categories`, label: "Categories" },
@@ -16,25 +22,21 @@ export function SettingsNav({ slug, orgType }: { slug: string; orgType: string }
     { href: `/org/${slug}/settings/security`, label: "Security" },
   ];
 
+  function isActive(href: string) {
+    return pathname === href;
+  }
+
   return (
-    <nav className="flex flex-wrap gap-2 border-b pb-2">
-      {links.map((l) => {
-        const active = pathname === l.href;
-        return (
-          <Link
-            key={l.href}
-            href={l.href}
-            className={cn(
-              "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
-              active
-                ? "bg-white border border-slate-200 shadow-sm text-[#1E3A8A] font-semibold"
-                : "text-slate-500 hover:text-slate-700 hover:bg-white/60"
-            )}
-          >
-            {l.label}
-          </Link>
-        );
-      })}
+    <nav className="flex gap-6 border-b border-slate-200">
+      {tabs.map((tab) => (
+        <Link
+          key={tab.href}
+          href={tab.href}
+          className={cn(baseClass, isActive(tab.href) ? activeClass : inactiveClass)}
+        >
+          {tab.label}
+        </Link>
+      ))}
     </nav>
   );
 }
