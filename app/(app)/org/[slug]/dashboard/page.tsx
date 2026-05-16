@@ -7,6 +7,7 @@ import {
   Clock,
   CircleCheck,
   CircleX,
+  ChevronRight,
   Receipt,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
@@ -291,11 +292,13 @@ export default async function DashboardPage({ params }: Props) {
                 const pct = maxAmount > 0 ? (Number(item.total) / maxAmount) * 100 : 0;
                 const isNavy = i % 2 !== 0;
                 return (
-                  <div key={item.category} className="flex items-center gap-3">
-                    <p className="w-32 shrink-0 truncate text-right text-xs text-slate-500">
-                      {item.category}
-                    </p>
-                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                  <div
+                    key={item.category}
+                    className="grid items-center gap-3"
+                    style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,2fr) 3.5rem" }}
+                  >
+                    <p className="truncate text-left text-xs text-slate-500">{item.category}</p>
+                    <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
                           isNavy ? "bg-[#1E3A8A]" : "bg-cyan-400"
@@ -303,7 +306,7 @@ export default async function DashboardPage({ params }: Props) {
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <p className="w-14 shrink-0 text-right text-xs font-medium text-slate-600 tabular-nums">
+                    <p className="text-right text-xs font-medium text-slate-600 tabular-nums">
                       {formatMoney(Number(item.total))}
                     </p>
                   </div>
@@ -329,26 +332,35 @@ export default async function DashboardPage({ params }: Props) {
                 View all
               </Link>
             </div>
-            <CardContent className="space-y-3">
-              {pendingList.map((e) => (
+            <div className="divide-y divide-slate-100">
+              {pendingList.map((expense) => (
                 <Link
-                  key={e.id}
-                  href={`/org/${params.slug}/expenses/${e.id}`}
-                  className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm transition-all duration-150 hover:border-cyan-400 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] active:scale-[0.98]"
+                  key={expense.id}
+                  href={`/org/${params.slug}/expenses/${expense.id}`}
+                  className="group flex items-center justify-between px-5 py-3.5 transition-colors hover:bg-slate-50"
                 >
-                  <div className="min-w-0 flex-1">
-                    <p className="truncate font-medium">{e.merchant}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {e.submittedBy.name} · {e.category?.name ?? "—"}
+                  <div className="min-w-0">
+                    <p className="truncate text-sm font-medium text-slate-800 group-hover:text-[#1E3A8A]">
+                      {expense.merchant}
+                    </p>
+                    <p className="mt-0.5 truncate text-xs text-slate-400">
+                      {expense.submittedBy?.name ?? "Unknown"} · {expense.category?.name ?? "—"}
                     </p>
                   </div>
-                  <span className="shrink-0 font-semibold tabular-nums">
-                    {formatMoney(Number(e.amount))}
-                  </span>
-                  <Receipt className="h-4 w-4 shrink-0 text-muted-foreground" />
+                  <div className="ml-4 flex shrink-0 items-center gap-3">
+                    <span className="text-sm font-semibold text-slate-700 tabular-nums">
+                      {formatMoney(Number(expense.amount))}
+                    </span>
+                    <ChevronRight className="h-4 w-4 text-slate-300 transition-colors group-hover:text-cyan-400" />
+                  </div>
                 </Link>
               ))}
-            </CardContent>
+              {pendingList.length === 0 && (
+                <p className="px-5 py-6 text-center text-sm text-slate-400">
+                  No expenses awaiting approval
+                </p>
+              )}
+            </div>
           </Card>
         ) : (
           <div />
