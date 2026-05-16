@@ -21,15 +21,19 @@ export function MobileHeader({
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="flex items-center gap-3 border-b bg-background px-4 py-3 md:hidden">
+    <header className="flex items-center gap-3 border-b border-[#1a3070] bg-[#0F2057] px-4 py-3 md:hidden">
       <Sheet open={open} onOpenChange={setOpen}>
         <SheetTrigger
-          className={buttonVariants({ variant: "outline", size: "icon" })}
+          className={buttonVariants({
+            variant: "ghost",
+            size: "icon",
+            className: "text-white hover:bg-white/10 hover:text-white",
+          })}
           aria-label="Open menu"
         >
           <Menu className="h-4 w-4" />
         </SheetTrigger>
-        <SheetContent side="left" className="w-64 border-slate-800 bg-slate-900 p-4 text-white">
+        <SheetContent side="left" className="w-64 border-[#1a3070] bg-[#0F2057] p-4 text-white">
           <SidebarContent
             slug={slug}
             orgName={orgName}
@@ -39,10 +43,10 @@ export function MobileHeader({
           />
         </SheetContent>
       </Sheet>
-      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-indigo-500 text-[10px] font-bold text-white">
+      <div className="flex h-6 w-6 shrink-0 items-center justify-center rounded bg-cyan-400 text-[10px] font-bold text-[#0F2057]">
         {orgName.slice(0, 1).toUpperCase()}
       </div>
-      <span className="truncate text-sm font-semibold">{orgName}</span>
+      <span className="truncate text-sm font-semibold text-white">{orgName}</span>
     </header>
   );
 }

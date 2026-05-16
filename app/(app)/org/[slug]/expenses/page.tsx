@@ -97,7 +97,7 @@ export default async function ExpensesListPage({ params, searchParams }: Props) 
     <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-semibold tracking-tight">Expenses</h1>
+          <h1 className="text-2xl font-semibold tracking-tight text-[#1E3A8A]">Expenses</h1>
           <p className="text-muted-foreground">Track and review team spend</p>
         </div>
         <Link className={buttonVariants()} href={`/org/${params.slug}/expenses/new`}>

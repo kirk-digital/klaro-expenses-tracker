@@ -27,8 +27,8 @@ export function SettingsNav({ slug, orgType }: { slug: string; orgType: string }
             className={cn(
               "rounded-md px-3 py-1.5 text-sm font-medium transition-colors",
               active
-                ? "border bg-background font-semibold text-foreground shadow-sm"
-                : "text-muted-foreground hover:bg-muted/50 hover:text-foreground"
+                ? "bg-white border border-slate-200 shadow-sm text-[#1E3A8A] font-semibold"
+                : "text-slate-500 hover:text-slate-700 hover:bg-white/60"
             )}
           >
             {l.label}

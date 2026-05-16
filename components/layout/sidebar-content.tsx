@@ -50,7 +50,7 @@ export function SidebarContent({
   return (
     <div className="flex h-full flex-col">
       <div className="mb-8 flex items-center gap-2.5 px-2">
-        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-indigo-500 text-xs font-bold text-white">
+        <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded-md bg-cyan-400 text-xs font-bold text-[#0F2057]">
           {orgName.slice(0, 1).toUpperCase()}
         </div>
         <p className="truncate text-sm font-semibold text-white">{orgName}</p>
@@ -69,10 +69,10 @@ export function SidebarContent({
               href={item.href}
               onClick={onNavigate}
               className={cn(
-                "flex items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-colors",
+                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                 active
-                  ? "border-white bg-white/10 font-semibold text-white"
-                  : "border-transparent text-slate-400 hover:bg-white/5 hover:text-white"
+                  ? "bg-cyan-400/15 text-cyan-400"
+                  : "text-slate-300 hover:bg-white/10 hover:text-white"
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
@@ -98,7 +98,7 @@ export function SidebarContent({
           type="button"
           variant="ghost"
           size="sm"
-          className="mt-2 w-full justify-start gap-2 text-slate-300 hover:bg-slate-800 hover:text-white"
+          className="mt-2 w-full justify-start gap-2 text-slate-300 hover:bg-white/10 hover:text-white"
           onClick={() => signOut({ callbackUrl: "/sign-in" })}
         >
           <LogOut className="h-4 w-4" />

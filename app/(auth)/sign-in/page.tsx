@@ -56,7 +56,7 @@ function SignInForm() {
   }
 
   return (
-    <Card className="w-full max-w-md">
+    <Card className="w-full max-w-md border border-slate-200 bg-white shadow-[0_2px_12px_rgba(0,0,0,0.08)]">
       <CardHeader>
         <CardTitle>Sign in</CardTitle>
         <CardDescription>Access your organisation workspace.</CardDescription>

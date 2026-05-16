@@ -16,13 +16,13 @@ export function OrgShell({
   userName: string;
   children: React.ReactNode;
 }) {
-  const sidebarClass = "bg-slate-900 text-white";
+  const sidebarClass = "bg-[#0F2057] text-white";
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-background">
       <aside
         className={cn(
-          "hidden w-56 shrink-0 border-r border-slate-800 p-4 md:block",
+          "hidden w-56 shrink-0 border-r border-[#1a3070] p-4 md:block",
           sidebarClass
         )}
       >
@@ -31,7 +31,7 @@ export function OrgShell({
 
       <div className="flex min-w-0 flex-1 flex-col">
         <MobileHeader slug={slug} orgName={orgName} role={role} userName={userName} />
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6 sm:px-6 md:py-8">
+        <main className="mx-auto w-full max-w-6xl flex-1 bg-background px-4 py-8 sm:px-6">
           {children}
         </main>
       </div>

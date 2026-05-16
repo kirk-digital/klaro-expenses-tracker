@@ -5,8 +5,8 @@ import { ExpenseStatus } from "@prisma/client";
 import {
   TrendingUp,
   Clock,
-  CheckCircle,
-  XCircle,
+  CircleCheck,
+  CircleX,
   Receipt,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
@@ -149,64 +149,76 @@ export default async function DashboardPage({ params }: Props) {
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Dashboard</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-[#1E3A8A]">Dashboard</h1>
         <p className="text-muted-foreground">Overview for {access.organization.name}</p>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <Link href={`/org/${params.slug}/expenses?status=approved`}>
-          <Card className="cursor-pointer rounded-xl border border-t-2 border-t-emerald-500 shadow-sm transition-colors hover:bg-muted/40">
-            <div className="p-4">
+          <Card className="relative overflow-hidden rounded-xl border border-slate-200 bg-white cursor-pointer transition-all duration-150 hover:border-cyan-400 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] active:scale-[0.98]">
+            <div className="absolute inset-x-0 top-0 h-[3px] bg-emerald-500 rounded-t-xl" />
+            <div className="p-4 pt-5">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
                   Approved spend
                 </p>
-                <TrendingUp className="h-4 w-4 shrink-0 text-green-500" />
+                <TrendingUp className="h-4 w-4 text-emerald-500 shrink-0" />
               </div>
-              <p className="mt-2 text-2xl font-bold tabular-nums">{formatMoney(totalSpend)}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">This month</p>
+              <p className="mt-2 text-2xl font-semibold text-[#1E3A8A] tabular-nums">
+                {formatMoney(totalSpend)}
+              </p>
+              <p className="mt-0.5 text-xs text-slate-400">This month</p>
             </div>
           </Card>
         </Link>
         <Link href={`/org/${params.slug}/approvals`}>
-          <Card className="cursor-pointer rounded-xl border border-t-2 border-t-amber-500 shadow-sm transition-colors hover:bg-muted/40">
-            <div className="p-4">
+          <Card className="relative overflow-hidden rounded-xl border border-slate-200 bg-white cursor-pointer transition-all duration-150 hover:border-cyan-400 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] active:scale-[0.98]">
+            <div className="absolute inset-x-0 top-0 h-[3px] bg-amber-400 rounded-t-xl" />
+            <div className="p-4 pt-5">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
                   Pending approvals
                 </p>
-                <Clock className="h-4 w-4 shrink-0 text-amber-500" />
+                <Clock className="h-4 w-4 text-amber-400 shrink-0" />
               </div>
-              <p className="mt-2 text-2xl font-bold tabular-nums">{pendingApprovals}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">Awaiting decision</p>
+              <p className="mt-2 text-2xl font-semibold text-[#1E3A8A] tabular-nums">
+                {pendingApprovals}
+              </p>
+              <p className="mt-0.5 text-xs text-slate-400">Awaiting decision</p>
             </div>
           </Card>
         </Link>
         <Link href={`/org/${params.slug}/expenses?status=approved`}>
-          <Card className="cursor-pointer rounded-xl border border-t-2 border-t-blue-500 shadow-sm transition-colors hover:bg-muted/40">
-            <div className="p-4">
+          <Card className="relative overflow-hidden rounded-xl border border-slate-200 bg-white cursor-pointer transition-all duration-150 hover:border-cyan-400 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] active:scale-[0.98]">
+            <div className="absolute inset-x-0 top-0 h-[3px] bg-[#1E3A8A] rounded-t-xl" />
+            <div className="p-4 pt-5">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
                   Approved count
                 </p>
-                <CheckCircle className="h-4 w-4 shrink-0 text-blue-500" />
+                <CircleCheck className="h-4 w-4 text-[#1E3A8A] shrink-0" />
               </div>
-              <p className="mt-2 text-2xl font-bold tabular-nums">{approvedCount}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">This month</p>
+              <p className="mt-2 text-2xl font-semibold text-[#1E3A8A] tabular-nums">
+                {approvedCount}
+              </p>
+              <p className="mt-0.5 text-xs text-slate-400">This month</p>
             </div>
           </Card>
         </Link>
         <Link href={`/org/${params.slug}/expenses?status=rejected`}>
-          <Card className="cursor-pointer rounded-xl border border-t-2 border-t-red-500 shadow-sm transition-colors hover:bg-muted/40">
-            <div className="p-4">
+          <Card className="relative overflow-hidden rounded-xl border border-slate-200 bg-white cursor-pointer transition-all duration-150 hover:border-cyan-400 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] active:scale-[0.98]">
+            <div className="absolute inset-x-0 top-0 h-[3px] bg-red-500 rounded-t-xl" />
+            <div className="p-4 pt-5">
               <div className="flex items-center justify-between">
-                <p className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
                   Rejected count
                 </p>
-                <XCircle className="h-4 w-4 shrink-0 text-red-500" />
+                <CircleX className="h-4 w-4 text-red-500 shrink-0" />
               </div>
-              <p className="mt-2 text-2xl font-bold tabular-nums">{rejectedCount}</p>
-              <p className="mt-0.5 text-xs text-muted-foreground">This month</p>
+              <p className="mt-2 text-2xl font-semibold text-[#1E3A8A] tabular-nums">
+                {rejectedCount}
+              </p>
+              <p className="mt-0.5 text-xs text-slate-400">This month</p>
             </div>
           </Card>
         </Link>
@@ -263,7 +275,7 @@ export default async function DashboardPage({ params }: Props) {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <Card className="rounded-xl lg:col-span-1">
-          <CardHeader>
+          <CardHeader className="border-b border-slate-100">
             <CardTitle>Spend by category</CardTitle>
             <CardDescription>Approved expenses this calendar month</CardDescription>
           </CardHeader>
@@ -291,7 +303,7 @@ export default async function DashboardPage({ params }: Props) {
                 <Link
                   key={e.id}
                   href={`/org/${params.slug}/expenses/${e.id}`}
-                  className="flex items-center gap-3 rounded-xl border p-3 text-sm transition-colors hover:bg-muted/50"
+                  className="flex items-center gap-3 rounded-xl border border-slate-200 bg-white p-3 text-sm transition-all duration-150 hover:border-cyan-400 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] active:scale-[0.98]"
                 >
                   <div className="min-w-0 flex-1">
                     <p className="truncate font-medium">{e.merchant}</p>

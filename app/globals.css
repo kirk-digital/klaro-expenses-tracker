@@ -5,14 +5,14 @@
 @layer base {
   :root {
     --radius: 0.5rem;
-    --background: 0 0% 100%;
-    --foreground: 240 10% 3.9%;
+    --background: 214 32% 96%;
+    --foreground: 222 84% 5%;
     --card: 0 0% 100%;
-    --card-foreground: 240 10% 3.9%;
+    --card-foreground: 222 84% 5%;
     --popover: 0 0% 100%;
     --popover-foreground: 240 10% 3.9%;
-    --primary: 240 5.9% 10%;
-    --primary-foreground: 0 0% 98%;
+    --primary: 224 71% 31%;
+    --primary-foreground: 0 0% 100%;
     --secondary: 240 4.8% 95.9%;
     --secondary-foreground: 240 5.9% 10%;
     --muted: 240 4.8% 95.9%;
@@ -23,7 +23,7 @@
     --destructive-foreground: 0 0% 98%;
     --border: 240 5.9% 90%;
     --input: 240 5.9% 90%;
-    --ring: 240 5.9% 10%;
+    --ring: 189 94% 50%;
     --radius-md: calc(var(--radius) + 2px);
     --sidebar: 0 0% 98%;
     --sidebar-foreground: 240 10% 3.9%;
@@ -33,6 +33,9 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    --brand-navy: #0F2057;
+    --brand-cyan: #22D3EE;
+    --brand-navy-sidebar: #0F2057;
   }
 
   .dark {

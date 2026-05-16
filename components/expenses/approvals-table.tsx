@@ -112,7 +112,10 @@ export function ApprovalsTable({
 
       <div className="space-y-3 md:hidden">
         {rows.map((e) => (
-          <div key={e.id} className="rounded-xl border bg-card p-4">
+          <div
+            key={e.id}
+            className="rounded-xl border border-slate-200 bg-white p-4 transition-all duration-150 hover:border-cyan-400 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] active:scale-[0.98]"
+          >
             <Link
               href={`/org/${slug}/expenses/${e.id}`}
               className="block transition-colors hover:text-primary"

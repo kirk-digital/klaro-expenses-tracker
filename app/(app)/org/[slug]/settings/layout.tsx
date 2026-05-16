@@ -18,7 +18,7 @@ export default async function SettingsLayout({
   return (
     <div className="space-y-8">
       <div>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
+        <h1 className="text-2xl font-semibold tracking-tight text-[#1E3A8A]">Settings</h1>
         <p className="text-muted-foreground">Manage your organisation</p>
       </div>
       <SettingsNav slug={params.slug} orgType={access.organization.type} />
