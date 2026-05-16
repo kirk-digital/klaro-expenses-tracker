@@ -14,7 +14,7 @@ import { prisma } from "@/lib/prisma";
 import { resolveOrgAccess } from "@/lib/org";
 import { canApprove, canViewAllExpenses } from "@/lib/role-helpers";
 import { formatMoney } from "@/lib/format";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
   TableBody,
@@ -25,7 +25,6 @@ import {
 } from "@/components/ui/table";
 import { ExpenseStatusBadge } from "@/components/expenses/status-badge";
 import { CategoryIcon } from "@/components/expenses/category-icon";
-import { SpendByCategoryChart } from "@/components/dashboard/spend-chart";
 import { buttonVariants } from "@/components/ui/button";
 
 type Props = { params: { slug: string } };
@@ -124,8 +123,12 @@ export default async function DashboardPage({ params }: Props) {
       : [];
 
   const totalSpend = Number(approvedThisMonth._sum.amount ?? 0);
-  const currency = access.organization.currency;
   const org = access.organization;
+
+  const spendByCategory = chartData.map((row) => ({
+    category: row.name,
+    total: row.amount,
+  }));
 
   const fundBreakdown =
     org.type === "charity"
@@ -275,29 +278,57 @@ export default async function DashboardPage({ params }: Props) {
 
       <div className="grid gap-8 lg:grid-cols-2">
         <Card className="rounded-xl lg:col-span-1">
-          <CardHeader className="border-b border-slate-100">
-            <CardTitle>Spend by category</CardTitle>
-            <CardDescription>Approved expenses this calendar month</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <SpendByCategoryChart data={chartData} currency={currency} />
-          </CardContent>
+          <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
+            <h2 className="text-sm font-semibold text-[#1E3A8A]">Spend by category</h2>
+            <span className="text-xs text-slate-400">
+              {new Date().toLocaleString("en-GB", { month: "long", year: "numeric" })}
+            </span>
+          </div>
+          <div className="px-5 py-4">
+            <div className="space-y-3">
+              {spendByCategory.map((item, i) => {
+                const maxAmount = Math.max(...spendByCategory.map((s) => Number(s.total)));
+                const pct = maxAmount > 0 ? (Number(item.total) / maxAmount) * 100 : 0;
+                const isNavy = i % 2 !== 0;
+                return (
+                  <div key={item.category} className="flex items-center gap-3">
+                    <p className="w-32 shrink-0 truncate text-right text-xs text-slate-500">
+                      {item.category}
+                    </p>
+                    <div className="h-2 flex-1 overflow-hidden rounded-full bg-slate-100">
+                      <div
+                        className={`h-full rounded-full transition-all duration-500 ${
+                          isNavy ? "bg-[#1E3A8A]" : "bg-cyan-400"
+                        }`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                    <p className="w-14 shrink-0 text-right text-xs font-medium text-slate-600 tabular-nums">
+                      {formatMoney(Number(item.total))}
+                    </p>
+                  </div>
+                );
+              })}
+              {spendByCategory.length === 0 && (
+                <p className="py-6 text-center text-sm text-slate-400">
+                  No approved expenses this month
+                </p>
+              )}
+            </div>
+          </div>
         </Card>
 
         {canApprove(access.role) && pendingList.length > 0 ? (
           <Card className="rounded-xl">
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <div>
-                <CardTitle>Pending approvals</CardTitle>
-                <CardDescription>Expenses waiting for a decision</CardDescription>
-              </div>
+            <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
+              <h2 className="text-sm font-semibold text-[#1E3A8A]">Pending approvals</h2>
               <Link
-                className={buttonVariants({ variant: "outline", size: "sm" })}
                 href={`/org/${params.slug}/approvals`}
+                className="text-xs font-medium text-cyan-500 hover:text-cyan-600"
               >
                 View all
               </Link>
-            </CardHeader>
+            </div>
             <CardContent className="space-y-3">
               {pendingList.map((e) => (
                 <Link
@@ -325,10 +356,10 @@ export default async function DashboardPage({ params }: Props) {
       </div>
 
       <Card className="rounded-xl">
-        <CardHeader>
-          <CardTitle>Recent expenses</CardTitle>
-          <CardDescription>Latest activity in your organisation</CardDescription>
-        </CardHeader>
+        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
+          <h2 className="text-sm font-semibold text-[#1E3A8A]">Recent expenses</h2>
+          <span className="text-xs text-slate-400">Last 10</span>
+        </div>
         <CardContent>
           {recent.length === 0 ? (
             <div className="flex flex-col items-center justify-center gap-4 py-12 text-center">
