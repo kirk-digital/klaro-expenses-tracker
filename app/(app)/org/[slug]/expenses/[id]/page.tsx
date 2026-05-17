@@ -44,10 +44,12 @@ export default async function ExpenseDetailPage({ params }: Props) {
     notFound();
   }
 
-  const isSubmitter = expense.submittedById === session.user.id;
+  const currentUserId = session.user.id;
+  const isSubmitter = expense.submittedById === currentUserId;
   const isApprover = canApprove(access.role);
   const showReview =
     isApprover && expense.status === "pending" && !isSubmitter;
+  const needsRevision = expense.status === "needs_revision";
 
   const receiptUrl =
     expense.receipts[0] &&
@@ -141,7 +143,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
         </CardContent>
       </Card>
 
-      {isSubmitter && expense.status === "needs_revision" ? (
+      {needsRevision && isSubmitter ? (
         <div className="flex justify-end">
           {/* TODO: link to edit page when /expenses/[id]/edit exists */}
           <Link
@@ -187,7 +189,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
         <ExpenseReviewActions slug={params.slug} expenseId={expense.id} />
       ) : null}
 
-      {isApprover && expense.status === "needs_revision" ? (
+      {needsRevision && !isSubmitter ? (
         <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
           Awaiting revision from {expense.submittedBy.name}. You&apos;ll be notified when
           they resubmit.
