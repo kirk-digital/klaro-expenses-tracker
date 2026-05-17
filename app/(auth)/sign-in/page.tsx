@@ -33,7 +33,11 @@ function SignInForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [loading, setLoading] = useState(false);
-  const form = useForm<Form>({ resolver: zodResolver(schema), mode: "onTouched" });
+  const form = useForm<Form>({
+    resolver: zodResolver(schema),
+    mode: "onSubmit",
+    reValidateMode: "onChange",
+  });
 
   async function onSubmit(values: Form) {
     setLoading(true);
