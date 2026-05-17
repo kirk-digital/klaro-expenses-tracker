@@ -11,6 +11,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import type { ExpenseForEdit } from "./expense-edit-shell";
+
+function formatDateInput(value: Date | string) {
+  const d = typeof value === "string" ? new Date(value) : value;
+  return d.toISOString().slice(0, 10);
+}
 
 const AMAP_HIGH = 0.45;
 const AMAP_LOW = 0.25;
@@ -29,9 +35,13 @@ type Form = z.infer<typeof schema>;
 export function MileageCreateForm({
   slug,
   milesThisYear = 0,
+  editMode = false,
+  expense,
 }: {
   slug: string;
   milesThisYear?: number;
+  editMode?: boolean;
+  expense?: ExpenseForEdit;
 }) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -39,9 +49,12 @@ export function MileageCreateForm({
   const form = useForm<Form>({
     resolver: zodResolver(schema),
     defaultValues: {
-      date: new Date().toISOString().split("T")[0],
-      description: "",
-      miles: "",
+      date:
+        editMode && expense
+          ? formatDateInput(expense.date)
+          : new Date().toISOString().split("T")[0],
+      description: editMode && expense ? expense.merchant : "",
+      miles: editMode && expense?.miles != null ? String(expense.miles) : "",
     },
   });
 
@@ -63,31 +76,42 @@ export function MileageCreateForm({
       const miles = Number(values.miles);
       const amount = calculateAmount(miles);
 
-      const res = await fetch("/api/expenses", {
-        method: "POST",
+      const payload = {
+        action: editMode ? "resubmit" : undefined,
+        expenseType: "mileage",
+        date: values.date,
+        merchant: values.description,
+        notes: values.description,
+        miles,
+        amapRate,
+        amount: amount.toFixed(2),
+        categoryName: "Car and travel",
+      };
+
+      const url = editMode && expense ? `/api/expenses/${expense.id}` : "/api/expenses";
+      const method = editMode ? "PATCH" : "POST";
+
+      const res = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json",
           [ORG_SLUG_HEADER]: slug,
         },
-        body: JSON.stringify({
-          expenseType: "mileage",
-          date: values.date,
-          merchant: values.description,
-          notes: values.description,
-          miles,
-          amapRate,
-          amount: amount.toFixed(2),
-          categoryName: "Car and travel",
-        }),
+        body: JSON.stringify(payload),
       });
 
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(data.error || "Could not submit mileage expense");
+        toast.error(
+          data.error ||
+            (editMode ? "Could not resubmit mileage expense" : "Could not submit mileage expense")
+        );
         return;
       }
-      toast.success("Mileage expense submitted");
-      router.push(`/org/${slug}/expenses`);
+      toast.success(editMode ? "Mileage expense resubmitted" : "Mileage expense submitted");
+      router.push(
+        editMode && expense ? `/org/${slug}/expenses/${expense.id}` : `/org/${slug}/expenses`
+      );
       router.refresh();
     } finally {
       setLoading(false);
@@ -173,7 +197,13 @@ export function MileageCreateForm({
           )}
 
           <Button type="submit" className="w-full" disabled={loading}>
-            {loading ? "Submitting…" : "Submit mileage"}
+            {loading
+              ? editMode
+                ? "Resubmitting…"
+                : "Submitting…"
+              : editMode
+                ? "Resubmit expense"
+                : "Submit mileage"}
           </Button>
         </form>
       </CardContent>

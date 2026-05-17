@@ -145,9 +145,8 @@ export default async function ExpenseDetailPage({ params }: Props) {
 
       {needsRevision && isSubmitter ? (
         <div className="flex justify-end">
-          {/* TODO: link to edit page when /expenses/[id]/edit exists */}
           <Link
-            href={`/org/${params.slug}/expenses`}
+            href={`/org/${params.slug}/expenses/${expense.id}/edit`}
             className="inline-flex items-center gap-2 rounded-lg bg-[#1E3A8A] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1E3A8A]/90"
           >
             <Pencil className="h-4 w-4" />
@@ -195,8 +194,6 @@ export default async function ExpenseDetailPage({ params }: Props) {
           they resubmit.
         </div>
       ) : null}
-
-      {/* TODO: reset status to pending on resubmit when edit page is implemented */}
 
       <Card className="rounded-xl">
         <CardHeader>

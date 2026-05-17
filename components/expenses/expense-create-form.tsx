@@ -18,25 +18,39 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import type { ExpenseForEdit } from "./expense-edit-shell";
+
+function formatDateInput(value: Date | string) {
+  const d = typeof value === "string" ? new Date(value) : value;
+  return d.toISOString().slice(0, 10);
+}
 
 export function ExpenseCreateForm({
   slug,
   categories,
   orgType,
   funds = [],
+  editMode = false,
+  expense,
 }: {
   slug: string;
   categories: { id: string; name: string }[];
   orgType: string;
   funds?: { id: string; name: string }[];
+  editMode?: boolean;
+  expense?: ExpenseForEdit;
 }) {
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
-  const [categoryId, setCategoryId] = useState<string>(categories[0]?.id ?? "");
+  const [categoryId, setCategoryId] = useState<string>(
+    editMode && expense?.categoryId
+      ? expense.categoryId
+      : (categories[0]?.id ?? "")
+  );
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
-  const [fundType, setFundType] = useState("unrestricted");
-  const [fundId, setFundId] = useState("");
+  const [fundType, setFundType] = useState(expense?.fundType ?? "unrestricted");
+  const [fundId, setFundId] = useState(expense?.fundId ?? "");
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -51,21 +65,26 @@ export function ExpenseCreateForm({
         fd.set("fundId", fundId);
       }
     }
+    if (editMode && expense) {
+      fd.set("action", "resubmit");
+    }
     setLoading(true);
     try {
-      const res = await fetch("/api/expenses", {
-        method: "POST",
+      const url = editMode && expense ? `/api/expenses/${expense.id}` : "/api/expenses";
+      const method = editMode ? "PATCH" : "POST";
+      const res = await fetch(url, {
+        method,
         headers: { [ORG_SLUG_HEADER]: slug },
         body: fd,
         credentials: "include",
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(data.error || "Could not create expense");
+        toast.error(data.error || (editMode ? "Could not resubmit expense" : "Could not create expense"));
         return;
       }
-      toast.success("Expense submitted");
-      router.push(`/org/${slug}/expenses/${data.id}`);
+      toast.success(editMode ? "Expense resubmitted" : "Expense submitted");
+      router.push(`/org/${slug}/expenses/${editMode && expense ? expense.id : data.id}`);
       router.refresh();
     } finally {
       setLoading(false);
@@ -77,7 +96,12 @@ export function ExpenseCreateForm({
       <form className="space-y-4" onSubmit={onSubmit}>
         <div className="space-y-2">
           <Label htmlFor="merchant">Merchant</Label>
-          <Input id="merchant" name="merchant" required />
+          <Input
+            id="merchant"
+            name="merchant"
+            required
+            defaultValue={editMode && expense ? expense.merchant : undefined}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="amount">Amount</Label>
@@ -93,6 +117,9 @@ export function ExpenseCreateForm({
               min="0.01"
               required
               className="pl-7"
+              defaultValue={
+                editMode && expense ? Number(expense.amount).toFixed(2) : undefined
+              }
             />
           </div>
         </div>
@@ -103,7 +130,11 @@ export function ExpenseCreateForm({
             name="date"
             type="date"
             required
-            defaultValue={new Date().toISOString().slice(0, 10)}
+            defaultValue={
+              editMode && expense
+                ? formatDateInput(expense.date)
+                : new Date().toISOString().slice(0, 10)
+            }
           />
         </div>
         <div className="space-y-2">
@@ -163,7 +194,12 @@ export function ExpenseCreateForm({
 
         <div className="space-y-2">
           <Label htmlFor="notes">Notes</Label>
-          <Textarea id="notes" name="notes" rows={3} />
+          <Textarea
+            id="notes"
+            name="notes"
+            rows={3}
+            defaultValue={editMode && expense?.notes ? expense.notes : undefined}
+          />
         </div>
         <div className="space-y-2">
           <Label htmlFor="receipt-input">Receipt</Label>
@@ -183,12 +219,26 @@ export function ExpenseCreateForm({
                 <p className="text-sm font-medium text-primary">{receiptFile.name}</p>
                 <p className="text-xs text-muted-foreground">Tap to change</p>
               </>
+            ) : editMode && expense?.receipts[0] ? (
+              <>
+                <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
+                  <Receipt className="h-5 w-5 text-primary" />
+                </div>
+                <p className="text-sm font-medium text-primary">
+                  {expense.receipts[0].filename}
+                </p>
+                <p className="text-xs text-muted-foreground">
+                  Current receipt · tap to replace
+                </p>
+              </>
             ) : (
               <>
                 <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted">
                   <Camera className="h-5 w-5 text-muted-foreground" />
                 </div>
-                <p className="text-sm font-medium">Take photo or upload receipt</p>
+                <p className="text-sm font-medium">
+                  {editMode ? "Upload a new receipt (optional)" : "Take photo or upload receipt"}
+                </p>
                 <p className="text-xs text-muted-foreground">PNG, JPG or PDF · max 10 MB</p>
               </>
             )}
@@ -199,7 +249,7 @@ export function ExpenseCreateForm({
               type="file"
               accept="image/*,application/pdf"
               capture="environment"
-              required
+              required={!editMode}
               className="sr-only"
               onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)}
             />
@@ -214,8 +264,10 @@ export function ExpenseCreateForm({
           {loading ? (
             <>
               <Loader2 className="animate-spin" />
-              Submitting…
+              {editMode ? "Resubmitting…" : "Submitting…"}
             </>
+          ) : editMode ? (
+            "Resubmit expense"
           ) : (
             "Submit expense"
           )}

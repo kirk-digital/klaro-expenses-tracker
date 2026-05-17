@@ -1,11 +1,17 @@
+export const runtime = "nodejs";
+
 import { NextResponse } from "next/server";
 import { ExpenseStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
-import { requireOrgFromRequest } from "@/lib/api-helpers";
+import { requireOrgFromRequest, type OrgRequestContext } from "@/lib/api-helpers";
 import { requireOrgMember, canApprove, canViewAllExpenses } from "@/lib/permissions";
 import { sendStatusChangeEmail } from "@/lib/email";
+import { saveReceipt } from "@/lib/storage";
 
 type Params = { params: { id: string } };
+
+const ALLOWED = new Set(["image/jpeg", "image/png", "application/pdf"]);
+const MAX_BYTES = 10 * 1024 * 1024;
 
 export async function GET(request: Request, context: Params) {
   const org = await requireOrgFromRequest(request);
@@ -46,32 +52,44 @@ export async function PATCH(request: Request, context: Params) {
   const org = await requireOrgFromRequest(request);
   if (org instanceof Response) return org;
 
+  const { id } = context.params;
+  const contentType = request.headers.get("content-type") ?? "";
+
+  if (contentType.includes("multipart/form-data")) {
+    return handleResubmitForm(request, org, id);
+  }
+
+  const body = (await request.json().catch(() => ({}))) as Record<string, unknown>;
+
+  if (body.action === "resubmit") {
+    return handleResubmitJson(body, org, id);
+  }
+
   const membership = await requireOrgMember(org.userId, org.organization.id);
   if (!canApprove(membership.role)) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }
 
-  const { id } = context.params;
-  const body = (await request.json()) as {
+  const statusBody = body as {
     status?: ExpenseStatus;
     comment?: string;
     revisionNote?: string;
   };
 
-  if (!body.status || !Object.values(ExpenseStatus).includes(body.status)) {
+  if (!statusBody.status || !Object.values(ExpenseStatus).includes(statusBody.status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
-  const needsComment = body.status === ExpenseStatus.rejected;
-  if (needsComment && (!body.comment || !body.comment.trim())) {
+  const needsComment = statusBody.status === ExpenseStatus.rejected;
+  if (needsComment && (!statusBody.comment || !statusBody.comment.trim())) {
     return NextResponse.json({ error: "Comment is required for this action" }, { status: 400 });
   }
 
   const revisionNote =
-    body.status === ExpenseStatus.needs_revision
-      ? (body.revisionNote ?? body.comment ?? "").trim()
+    statusBody.status === ExpenseStatus.needs_revision
+      ? (statusBody.revisionNote ?? statusBody.comment ?? "").trim()
       : null;
-  if (body.status === ExpenseStatus.needs_revision) {
+  if (statusBody.status === ExpenseStatus.needs_revision) {
     if (!revisionNote) {
       return NextResponse.json({ error: "Revision reason is required" }, { status: 400 });
     }
@@ -99,30 +117,30 @@ export async function PATCH(request: Request, context: Params) {
     const next = await tx.expense.update({
       where: { id: expense.id },
       data: {
-        status: body.status,
-        ...(body.status === ExpenseStatus.needs_revision
+        status: statusBody.status,
+        ...(statusBody.status === ExpenseStatus.needs_revision
           ? { revisionNote }
           : { revisionNote: null }),
       },
     });
 
-    if (body.comment?.trim() && body.status !== ExpenseStatus.needs_revision) {
+    if (statusBody.comment?.trim() && statusBody.status !== ExpenseStatus.needs_revision) {
       await tx.expenseComment.create({
         data: {
           expenseId: expense.id,
           authorId: org.userId,
-          body: body.comment.trim(),
+          body: statusBody.comment.trim(),
         },
       });
     }
 
     if (expense.submittedById !== org.userId) {
       const message =
-        body.status === ExpenseStatus.approved
+        statusBody.status === ExpenseStatus.approved
           ? `Your expense "${expense.merchant}" was approved.`
-          : body.status === ExpenseStatus.rejected
+          : statusBody.status === ExpenseStatus.rejected
             ? `Your expense "${expense.merchant}" was rejected.`
-            : body.status === ExpenseStatus.needs_revision
+            : statusBody.status === ExpenseStatus.needs_revision
               ? `Your expense "${expense.merchant}" was sent back for revision${revisionNote ? `: ${revisionNote}` : "."}`
               : `Your expense "${expense.merchant}" was updated.`;
 
@@ -141,9 +159,9 @@ export async function PATCH(request: Request, context: Params) {
 
   if (
     expense.submittedById !== org.userId &&
-    (body.status === ExpenseStatus.approved ||
-      body.status === ExpenseStatus.rejected ||
-      body.status === ExpenseStatus.needs_revision)
+    (statusBody.status === ExpenseStatus.approved ||
+      statusBody.status === ExpenseStatus.rejected ||
+      statusBody.status === ExpenseStatus.needs_revision)
   ) {
     try {
       const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
@@ -151,8 +169,8 @@ export async function PATCH(request: Request, context: Params) {
         to: expense.submittedBy.email,
         submitterName: expense.submittedBy.name ?? "there",
         merchant: expense.merchant ?? "your expense",
-        status: body.status,
-        comment: revisionNote ?? body.comment ?? null,
+        status: statusBody.status,
+        comment: revisionNote ?? statusBody.comment ?? null,
         expenseUrl: `${baseUrl}/org/${expense.organization.slug}/expenses/${expense.id}`,
       });
     } catch (emailErr) {
@@ -163,5 +181,280 @@ export async function PATCH(request: Request, context: Params) {
   return NextResponse.json({
     ...updated,
     amount: updated.amount.toString(),
+  });
+}
+
+async function loadExpenseForResubmit(org: OrgRequestContext, id: string) {
+  await requireOrgMember(org.userId, org.organization.id);
+
+  const expense = await prisma.expense.findFirst({
+    where: { id, organizationId: org.organization.id },
+    include: { receipts: true },
+  });
+
+  if (!expense) {
+    return { error: NextResponse.json({ error: "Not found" }, { status: 404 }) };
+  }
+
+  if (expense.submittedById !== org.userId) {
+    return { error: NextResponse.json({ error: "Forbidden" }, { status: 403 }) };
+  }
+
+  if (expense.status !== ExpenseStatus.needs_revision) {
+    return {
+      error: NextResponse.json(
+        { error: "Only expenses needing revision can be resubmitted" },
+        { status: 400 }
+      ),
+    };
+  }
+
+  return { expense };
+}
+
+async function notifyApproversOnResubmit(
+  org: OrgRequestContext,
+  expenseId: string,
+  merchant: string,
+  submitterName: string
+) {
+  const approvers = await prisma.organizationMember.findMany({
+    where: {
+      organizationId: org.organization.id,
+      role: { in: ["owner", "admin", "approver"] },
+      userId: { not: org.userId },
+    },
+    select: { userId: true },
+  });
+
+  if (approvers.length > 0) {
+    await prisma.notification.createMany({
+      data: approvers.map(({ userId }) => ({
+        userId,
+        organizationId: org.organization.id,
+        expenseId,
+        message: `${submitterName} resubmitted "${merchant}" for approval.`,
+      })),
+    });
+  }
+}
+
+async function handleResubmitForm(request: Request, org: OrgRequestContext, id: string) {
+  const loaded = await loadExpenseForResubmit(org, id);
+  if ("error" in loaded && loaded.error) return loaded.error;
+  const expense = loaded.expense!;
+
+  const formData = await request.formData();
+  if (String(formData.get("action") ?? "") !== "resubmit") {
+    return NextResponse.json({ error: "Invalid action" }, { status: 400 });
+  }
+
+  const merchant = String(formData.get("merchant") ?? "").trim();
+  const amountRaw = String(formData.get("amount") ?? "");
+  const dateRaw = String(formData.get("date") ?? "");
+  const categoryId = formData.get("categoryId") ? String(formData.get("categoryId")) : null;
+  const notes = formData.get("notes") ? String(formData.get("notes")) : null;
+  const fundType = formData.get("fundType") ? String(formData.get("fundType")) : null;
+  const fundId = formData.get("fundId") ? String(formData.get("fundId")) : null;
+  const file = formData.get("receipt");
+
+  if (!merchant || !amountRaw || !dateRaw) {
+    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+
+  const amount = Number.parseFloat(amountRaw);
+  if (Number.isNaN(amount) || amount <= 0) {
+    return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+  }
+
+  const date = new Date(dateRaw);
+  if (Number.isNaN(date.getTime())) {
+    return NextResponse.json({ error: "Invalid date" }, { status: 400 });
+  }
+
+  if (categoryId) {
+    const cat = await prisma.category.findFirst({
+      where: {
+        id: categoryId,
+        organizationId: org.organization.id,
+        archived: false,
+      },
+    });
+    if (!cat) {
+      return NextResponse.json({ error: "Invalid category" }, { status: 400 });
+    }
+  }
+
+  if (fundId) {
+    const fund = await prisma.fund.findFirst({
+      where: { id: fundId, organizationId: org.organization.id, archived: false },
+    });
+    if (!fund) {
+      return NextResponse.json({ error: "Invalid fund" }, { status: 400 });
+    }
+  }
+
+  if (file instanceof File && file.size > 0) {
+    if (!ALLOWED.has(file.type)) {
+      return NextResponse.json({ error: "Receipt must be JPEG, PNG, or PDF" }, { status: 400 });
+    }
+    if (file.size > MAX_BYTES) {
+      return NextResponse.json({ error: "Receipt must be 10MB or smaller" }, { status: 400 });
+    }
+  }
+
+  const submitter = await prisma.user.findUnique({
+    where: { id: org.userId },
+    select: { name: true },
+  });
+  const submitterName = submitter?.name ?? "A team member";
+
+  let receiptBuffer: Buffer | null = null;
+  let receiptMeta: { name: string; type: string } | null = null;
+  if (file instanceof File && file.size > 0) {
+    receiptBuffer = Buffer.from(await file.arrayBuffer());
+    receiptMeta = { name: file.name, type: file.type };
+  }
+
+  await prisma.$transaction(async (tx) => {
+    await tx.expense.update({
+      where: { id: expense.id },
+      data: {
+        merchant,
+        amount,
+        date,
+        categoryId,
+        notes,
+        status: ExpenseStatus.pending,
+        revisionNote: null,
+        ...(fundType ? { fundType } : { fundType: null }),
+        ...(fundId ? { fundId } : { fundId: null }),
+      },
+    });
+
+    if (receiptBuffer && receiptMeta) {
+      await tx.receipt.deleteMany({ where: { expenseId: expense.id } });
+
+      const saved = await saveReceipt(org.organization.id, expense.id, {
+        buffer: receiptBuffer,
+        originalname: receiptMeta.name,
+        mimetype: receiptMeta.type,
+      });
+
+      await tx.receipt.create({
+        data: {
+          expenseId: expense.id,
+          filename: saved.filename,
+          mimeType: receiptMeta.type,
+          storagePath: saved.storagePath,
+        },
+      });
+    }
+  });
+
+  try {
+    await notifyApproversOnResubmit(org, expense.id, merchant, submitterName);
+  } catch (e) {
+    console.error("[expenses] Failed to create resubmit notifications", e);
+  }
+
+  const full = await prisma.expense.findFirst({
+    where: { id: expense.id, organizationId: org.organization.id },
+    include: { category: true, receipts: true },
+  });
+
+  return NextResponse.json({
+    ...full,
+    amount: full?.amount.toString(),
+    miles: full?.miles?.toString() ?? null,
+    amapRate: full?.amapRate?.toString() ?? null,
+  });
+}
+
+async function handleResubmitJson(
+  body: Record<string, unknown>,
+  org: OrgRequestContext,
+  id: string
+) {
+  const loaded = await loadExpenseForResubmit(org, id);
+  if ("error" in loaded && loaded.error) return loaded.error;
+  const expense = loaded.expense!;
+
+  if (expense.expenseType !== "mileage") {
+    return NextResponse.json({ error: "Invalid expense type for JSON resubmit" }, { status: 400 });
+  }
+
+  const merchant = String(body.merchant ?? "").trim();
+  const amountRaw = String(body.amount ?? "");
+  const dateRaw = String(body.date ?? "");
+  const notes = body.notes ? String(body.notes) : null;
+  const milesRaw = body.miles;
+  const amapRateRaw = body.amapRate;
+
+  if (!merchant || !amountRaw || !dateRaw) {
+    return NextResponse.json({ error: "Missing required fields" }, { status: 400 });
+  }
+
+  const amount = Number.parseFloat(amountRaw);
+  if (Number.isNaN(amount) || amount <= 0) {
+    return NextResponse.json({ error: "Invalid amount" }, { status: 400 });
+  }
+
+  const miles = Number(milesRaw);
+  if (Number.isNaN(miles) || miles <= 0) {
+    return NextResponse.json({ error: "Invalid miles" }, { status: 400 });
+  }
+
+  const amapRate = Number(amapRateRaw);
+  if (Number.isNaN(amapRate) || amapRate <= 0) {
+    return NextResponse.json({ error: "Invalid AMAP rate" }, { status: 400 });
+  }
+
+  const date = new Date(dateRaw);
+  if (Number.isNaN(date.getTime())) {
+    return NextResponse.json({ error: "Invalid date" }, { status: 400 });
+  }
+
+  let categoryId = body.categoryId ? String(body.categoryId) : expense.categoryId;
+  if (!categoryId && body.categoryName) {
+    const cat = await prisma.category.findFirst({
+      where: { organizationId: org.organization.id, name: String(body.categoryName) },
+    });
+    categoryId = cat?.id ?? null;
+  }
+
+  const submitter = await prisma.user.findUnique({
+    where: { id: org.userId },
+    select: { name: true },
+  });
+  const submitterName = submitter?.name ?? "A team member";
+
+  const updated = await prisma.expense.update({
+    where: { id: expense.id },
+    data: {
+      merchant,
+      amount,
+      date,
+      notes,
+      miles,
+      amapRate,
+      categoryId,
+      status: ExpenseStatus.pending,
+      revisionNote: null,
+    },
+    include: { category: true, receipts: true },
+  });
+
+  try {
+    await notifyApproversOnResubmit(org, expense.id, merchant, submitterName);
+  } catch (e) {
+    console.error("[expenses] Failed to create resubmit notifications", e);
+  }
+
+  return NextResponse.json({
+    ...updated,
+    amount: updated.amount.toString(),
+    miles: updated.miles?.toString() ?? null,
+    amapRate: updated.amapRate?.toString() ?? null,
   });
 }
