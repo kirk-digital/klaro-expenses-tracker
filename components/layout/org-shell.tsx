@@ -8,12 +8,14 @@ export function OrgShell({
   orgName,
   role,
   userName,
+  unreadCount,
   children,
 }: {
   slug: string;
   orgName: string;
   role: MemberRole;
   userName: string;
+  unreadCount?: number;
   children: React.ReactNode;
 }) {
   return (
@@ -23,11 +25,23 @@ export function OrgShell({
           "hidden md:flex w-56 shrink-0 flex-col sticky top-0 h-screen overflow-y-auto border-r border-[#1a3070] p-4 bg-[#0F2057] text-white"
         )}
       >
-        <SidebarContent slug={slug} orgName={orgName} role={role} userName={userName} />
+        <SidebarContent
+          slug={slug}
+          orgName={orgName}
+          role={role}
+          userName={userName}
+          unreadCount={unreadCount}
+        />
       </aside>
 
       <div className="flex min-w-0 flex-1 flex-col">
-        <MobileHeader slug={slug} orgName={orgName} role={role} userName={userName} />
+        <MobileHeader
+          slug={slug}
+          orgName={orgName}
+          role={role}
+          userName={userName}
+          unreadCount={unreadCount}
+        />
         <main className="mx-auto w-full max-w-6xl flex-1 bg-background px-4 py-8 sm:px-6">
           {children}
         </main>

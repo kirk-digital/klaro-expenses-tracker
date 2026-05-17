@@ -12,11 +12,13 @@ export function MobileHeader({
   orgName,
   role,
   userName,
+  unreadCount,
 }: {
   slug: string;
   orgName: string;
   role: MemberRole;
   userName: string;
+  unreadCount?: number;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -39,6 +41,7 @@ export function MobileHeader({
             orgName={orgName}
             role={role}
             userName={userName}
+            unreadCount={unreadCount}
             onNavigate={() => setOpen(false)}
           />
         </SheetContent>

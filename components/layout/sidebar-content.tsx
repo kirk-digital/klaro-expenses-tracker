@@ -37,12 +37,14 @@ export function SidebarContent({
   orgName,
   role,
   userName,
+  unreadCount,
   onNavigate,
 }: {
   slug: string;
   orgName: string;
   role: MemberRole;
   userName: string;
+  unreadCount?: number;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
@@ -63,6 +65,7 @@ export function SidebarContent({
           const active =
             pathname === item.href || pathname.startsWith(`${item.href}/`);
           const Icon = item.icon;
+          const isNotifications = item.href.endsWith("/notifications");
           return (
             <Link
               key={item.href}
@@ -76,7 +79,12 @@ export function SidebarContent({
               )}
             >
               <Icon className="h-4 w-4 shrink-0" />
-              {item.label}
+              <span>{item.label}</span>
+              {isNotifications && unreadCount && unreadCount > 0 ? (
+                <span className="ml-auto flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-semibold text-white">
+                  {unreadCount > 99 ? "99+" : unreadCount}
+                </span>
+              ) : null}
             </Link>
           );
         })}

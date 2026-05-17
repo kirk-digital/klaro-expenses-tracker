@@ -9,12 +9,14 @@ import {
   CircleX,
   ChevronRight,
   Receipt,
+  Plus,
 } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveOrgAccess } from "@/lib/org";
 import { canApprove, canViewAllExpenses } from "@/lib/role-helpers";
 import { formatMoney } from "@/lib/format";
+import { getTaxYearStart } from "@/lib/tax-year";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   Table,
@@ -69,6 +71,49 @@ export default async function DashboardPage({ params }: Props) {
       status: ExpenseStatus.rejected,
       date: { gte: monthStart, lte: monthEnd },
     },
+  });
+
+  const taxYearStart = getTaxYearStart();
+
+  const ytdSpend = await prisma.expense.aggregate({
+    where: {
+      organizationId: orgId,
+      status: ExpenseStatus.approved,
+      date: { gte: taxYearStart },
+    },
+    _sum: { amount: true },
+  });
+
+  const hasMileageExpenses = await prisma.expense.findFirst({
+    where: { organizationId: orgId, expenseType: "mileage" },
+    select: { id: true },
+  });
+
+  const ytdMileage = await prisma.expense.aggregate({
+    where: {
+      organizationId: orgId,
+      status: ExpenseStatus.approved,
+      date: { gte: taxYearStart },
+      ...(hasMileageExpenses
+        ? { expenseType: "mileage" }
+        : { miles: { not: null } }),
+    },
+    _sum: { miles: true },
+  });
+
+  const totalMiles = Number(ytdMileage._sum.miles ?? 0);
+  const amapValue =
+    totalMiles <= 10000
+      ? totalMiles * 0.45
+      : 10000 * 0.45 + (totalMiles - 10000) * 0.25;
+
+  const taxYearStartYear = taxYearStart.getFullYear();
+  const taxYearLabel = `${taxYearStartYear}–${String(taxYearStartYear + 1).slice(2)}`;
+  const taxYearEnd = new Date(Date.UTC(taxYearStartYear + 1, 3, 5));
+  const taxYearEndFormatted = taxYearEnd.toLocaleDateString("en-GB", {
+    day: "numeric",
+    month: "short",
+    year: "numeric",
   });
 
   const recentWhere = canViewAllExpenses(access.role)
@@ -152,9 +197,57 @@ export default async function DashboardPage({ params }: Props) {
 
   return (
     <div className="space-y-8">
-      <div>
-        <h1 className="text-2xl font-semibold tracking-tight text-[#1E3A8A]">Dashboard</h1>
-        <p className="text-muted-foreground">Overview for {access.organization.name}</p>
+      <div className="mb-6 flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-[#1E3A8A]">Dashboard</h1>
+          <p className="mt-1 text-sm text-slate-400">Overview for {org.name}</p>
+        </div>
+        <Link
+          href={`/org/${params.slug}/expenses/new`}
+          className="flex items-center gap-1.5 rounded-lg bg-[#1E3A8A] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1a3278]"
+        >
+          <Plus className="h-4 w-4" />
+          Add expense
+        </Link>
+      </div>
+
+      <div className="mb-6 grid grid-cols-3 gap-3">
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+          <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
+            YTD spend
+          </p>
+          <p className="mt-1.5 text-xl font-semibold text-[#1E3A8A] tabular-nums">
+            {formatMoney(Number(ytdSpend._sum.amount ?? 0))}
+          </p>
+          <p className="mt-0.5 text-[10px] text-slate-400">
+            {new Date(taxYearStart).toLocaleDateString("en-GB", {
+              day: "numeric",
+              month: "short",
+              year: "numeric",
+            })}{" "}
+            – present
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+          <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
+            YTD mileage
+          </p>
+          <p className="mt-1.5 text-xl font-semibold text-[#1E3A8A] tabular-nums">
+            {totalMiles.toLocaleString("en-GB")} mi
+          </p>
+          <p className="mt-0.5 text-[10px] text-slate-400">
+            {formatMoney(amapValue)} AMAP value
+          </p>
+        </div>
+
+        <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+          <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
+            Tax year
+          </p>
+          <p className="mt-1.5 text-xl font-semibold text-[#1E3A8A]">{taxYearLabel}</p>
+          <p className="mt-0.5 text-[10px] text-slate-400">Ends {taxYearEndFormatted}</p>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -277,7 +370,7 @@ export default async function DashboardPage({ params }: Props) {
         </div>
       )}
 
-      <div className="grid gap-8 lg:grid-cols-2">
+      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
         <Card className="rounded-xl lg:col-span-1">
           <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
             <h2 className="text-sm font-semibold text-[#1E3A8A]">Spend by category</h2>

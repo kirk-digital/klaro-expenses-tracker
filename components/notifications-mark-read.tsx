@@ -6,7 +6,13 @@ import { toast } from "sonner";
 import { ORG_SLUG_HEADER } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 
-export function NotificationsMarkRead({ slug }: { slug: string }) {
+export function NotificationsMarkRead({
+  slug,
+  className,
+}: {
+  slug: string;
+  className?: string;
+}) {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -31,6 +37,19 @@ export function NotificationsMarkRead({ slug }: { slug: string }) {
     } finally {
       setLoading(false);
     }
+  }
+
+  if (className) {
+    return (
+      <button
+        type="button"
+        onClick={markAll}
+        disabled={loading}
+        className={className}
+      >
+        {loading ? "Updating…" : "Mark all read"}
+      </button>
+    );
   }
 
   return (
