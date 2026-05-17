@@ -3,6 +3,7 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveOrgAccess } from "@/lib/org";
 import { OrgShell } from "@/components/layout/org-shell";
+import { NotificationPoller } from "@/components/notifications/notification-poller";
 
 export default async function OrgLayout({
   children,
@@ -30,14 +31,17 @@ export default async function OrgLayout({
   });
 
   return (
-    <OrgShell
-      slug={params.slug}
-      orgName={access.organization.name}
-      role={access.role}
-      userName={session.user.name ?? session.user.email ?? "User"}
-      unreadCount={unreadCount}
-    >
-      {children}
-    </OrgShell>
+    <>
+      <OrgShell
+        slug={params.slug}
+        orgName={access.organization.name}
+        role={access.role}
+        userName={session.user.name ?? session.user.email ?? "User"}
+        unreadCount={unreadCount}
+      >
+        {children}
+      </OrgShell>
+      <NotificationPoller />
+    </>
   );
 }
