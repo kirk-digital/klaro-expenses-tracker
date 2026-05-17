@@ -1055,7 +1055,7 @@ async function seedCharity(hash: string, uploadDir: string) {
     amount: 350.0,
     fundId: lottery.id,
     fundType: "restricted",
-    status: "pending",
+    status: "approved",
     notes: "Hall hire for youth programme — May block booking",
     receipt: {
       merchant: "Kirkdale Community Hall",

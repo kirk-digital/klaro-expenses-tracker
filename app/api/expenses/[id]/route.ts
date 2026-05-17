@@ -113,6 +113,18 @@ export async function PATCH(request: Request, context: Params) {
     return NextResponse.json({ error: "Not found" }, { status: 404 });
   }
 
+  if (
+    (statusBody.status === ExpenseStatus.approved ||
+      statusBody.status === ExpenseStatus.rejected ||
+      statusBody.status === ExpenseStatus.needs_revision) &&
+    expense.submittedById === org.userId
+  ) {
+    return NextResponse.json(
+      { error: "You cannot approve, reject, or request revision on your own expense." },
+      { status: 403 }
+    );
+  }
+
   const updated = await prisma.$transaction(async (tx) => {
     const next = await tx.expense.update({
       where: { id: expense.id },

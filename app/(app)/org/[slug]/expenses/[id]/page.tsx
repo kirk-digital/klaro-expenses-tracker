@@ -5,7 +5,7 @@ import { ChevronLeft, Pencil } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveOrgAccess } from "@/lib/org";
-import { canApprove, canViewAllExpenses } from "@/lib/role-helpers";
+import { canApprove as roleCanApprove, canViewAllExpenses } from "@/lib/role-helpers";
 import { formatMoney } from "@/lib/format";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpenseStatusBadge } from "@/components/expenses/status-badge";
@@ -46,9 +46,9 @@ export default async function ExpenseDetailPage({ params }: Props) {
 
   const currentUserId = session.user.id;
   const isSubmitter = expense.submittedById === currentUserId;
-  const isApprover = canApprove(access.role);
-  const showReview =
-    isApprover && expense.status === "pending" && !isSubmitter;
+  const canApprove =
+    roleCanApprove(access.role) && expense.submittedById !== session.user.id;
+  const showReview = canApprove && expense.status === "pending";
   const needsRevision = expense.status === "needs_revision";
 
   const receiptUrl =
@@ -186,6 +186,10 @@ export default async function ExpenseDetailPage({ params }: Props) {
 
       {showReview ? (
         <ExpenseReviewActions slug={params.slug} expenseId={expense.id} />
+      ) : expense.status === "pending" && isSubmitter ? (
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+          Awaiting approval
+        </div>
       ) : null}
 
       {needsRevision && !isSubmitter ? (

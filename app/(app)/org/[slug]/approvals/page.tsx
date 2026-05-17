@@ -20,7 +20,11 @@ export default async function ApprovalsPage({ params }: Props) {
   }
 
   const pending = await prisma.expense.findMany({
-    where: { organizationId: access.organization.id, status: ExpenseStatus.pending },
+    where: {
+      organizationId: access.organization.id,
+      status: ExpenseStatus.pending,
+      NOT: { submittedById: session.user.id },
+    },
     orderBy: { date: "desc" },
     include: {
       category: true,
