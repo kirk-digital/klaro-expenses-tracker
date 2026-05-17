@@ -497,32 +497,52 @@ export default async function DashboardPage({ params }: Props) {
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {recent.map((e) => (
-                  <TableRow key={e.id}>
-                    <TableCell>
-                      <Link
-                        className="font-medium text-primary hover:underline"
-                        href={`/org/${params.slug}/expenses/${e.id}`}
-                      >
-                        {e.merchant}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <span className="flex items-center gap-2">
-                        <CategoryIcon name={e.category?.name} />
-                        {e.category?.name ?? "—"}
-                      </span>
-                    </TableCell>
-                    <TableCell className="text-right tabular-nums">
-                      {formatMoney(Number(e.amount))}
-                    </TableCell>
-                    <TableCell>{format(e.date, "MMM d, yyyy")}</TableCell>
-                    <TableCell>
-                      <ExpenseStatusBadge status={e.status} />
-                    </TableCell>
-                    <TableCell>{e.submittedBy.name}</TableCell>
-                  </TableRow>
-                ))}
+                {recent.map((e) => {
+                  const expenseHref = `/org/${params.slug}/expenses/${e.id}`;
+                  return (
+                    <TableRow
+                      key={e.id}
+                      className="cursor-pointer hover:bg-slate-50 transition-colors active:bg-slate-100"
+                    >
+                      <TableCell>
+                        <Link
+                          href={expenseHref}
+                          className="block font-medium text-slate-800"
+                        >
+                          {e.merchant}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link href={expenseHref} className="block">
+                          <span className="flex items-center gap-2">
+                            <CategoryIcon name={e.category?.name} />
+                            {e.category?.name ?? "—"}
+                          </span>
+                        </Link>
+                      </TableCell>
+                      <TableCell className="text-right tabular-nums">
+                        <Link href={expenseHref} className="block">
+                          {formatMoney(Number(e.amount))}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link href={expenseHref} className="block">
+                          {format(e.date, "MMM d, yyyy")}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link href={expenseHref} className="block">
+                          <ExpenseStatusBadge status={e.status} />
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link href={expenseHref} className="block">
+                          {e.submittedBy.name}
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
           )}
