@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 import { format } from "date-fns";
-import { ChevronLeft } from "lucide-react";
+import { ChevronLeft, Pencil } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveOrgAccess } from "@/lib/org";
@@ -44,10 +44,10 @@ export default async function ExpenseDetailPage({ params }: Props) {
     notFound();
   }
 
+  const isSubmitter = expense.submittedById === session.user.id;
+  const isApprover = canApprove(access.role);
   const showReview =
-    canApprove(access.role) &&
-    expense.status === "pending" &&
-    expense.submittedById !== session.user.id;
+    isApprover && expense.status === "pending" && !isSubmitter;
 
   const receiptUrl =
     expense.receipts[0] &&
@@ -125,8 +125,34 @@ export default async function ExpenseDetailPage({ params }: Props) {
               <p className="whitespace-pre-wrap">{expense.notes}</p>
             </div>
           ) : null}
+          {expense.status === "needs_revision" ? (
+            <div className="sm:col-span-2">
+              <div className="mt-4 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
+                <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
+                  Revision requested
+                </p>
+                <p className="text-sm text-amber-800">
+                  {expense.revisionNote ??
+                    "This expense has been sent back for revision."}
+                </p>
+              </div>
+            </div>
+          ) : null}
         </CardContent>
       </Card>
+
+      {isSubmitter && expense.status === "needs_revision" ? (
+        <div className="flex justify-end">
+          {/* TODO: link to edit page when /expenses/[id]/edit exists */}
+          <Link
+            href={`/org/${params.slug}/expenses`}
+            className="inline-flex items-center gap-2 rounded-lg bg-[#1E3A8A] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1E3A8A]/90"
+          >
+            <Pencil className="h-4 w-4" />
+            Edit &amp; resubmit
+          </Link>
+        </div>
+      ) : null}
 
       {receiptUrl ? (
         <Card className="rounded-xl">
@@ -160,6 +186,15 @@ export default async function ExpenseDetailPage({ params }: Props) {
       {showReview ? (
         <ExpenseReviewActions slug={params.slug} expenseId={expense.id} />
       ) : null}
+
+      {isApprover && expense.status === "needs_revision" ? (
+        <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
+          Awaiting revision from {expense.submittedBy.name}. You&apos;ll be notified when
+          they resubmit.
+        </div>
+      ) : null}
+
+      {/* TODO: reset status to pending on resubmit when edit page is implemented */}
 
       <Card className="rounded-xl">
         <CardHeader>

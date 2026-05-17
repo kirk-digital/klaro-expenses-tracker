@@ -92,6 +92,7 @@ type ExpenseSeedData = {
   miles?: number;
   amapRate?: number;
   notes?: string;
+  revisionNote?: string;
   status: "pending" | "approved" | "rejected" | "needs_revision";
   fundId?: string;
   fundType?: string;
@@ -223,6 +224,7 @@ async function seedBusiness(hash: string, uploadDir: string) {
         miles: data.miles ?? null,
         amapRate: data.amapRate ?? null,
         notes: data.notes ?? null,
+        revisionNote: data.revisionNote ?? null,
         status: data.status,
       },
     });
@@ -452,7 +454,9 @@ async function seedBusiness(hash: string, uploadDir: string) {
     merchant: "CITB",
     amount: 180.0,
     status: "needs_revision",
-    notes: "CSCS card renewal — please confirm this is for Tom not yourself",
+    notes: "CSCS card renewal for Tom Clarke — site team CSCS renewal",
+    revisionNote:
+      "Please confirm this expense is for Tom and not yourself — James, you already hold a valid CSCS card.",
     receipt: {
       merchant: "CITB",
       address: "Kings Court, London Road, Peterborough, PE2 8AL",

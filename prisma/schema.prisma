@@ -115,6 +115,7 @@ model Expense {
   merchant       String
   date           DateTime
   notes          String?
+  revisionNote   String?
   miles          Decimal?
   amapRate       Decimal?
   fundId         String?

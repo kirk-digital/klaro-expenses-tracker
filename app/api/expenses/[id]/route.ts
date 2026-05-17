@@ -55,16 +55,32 @@ export async function PATCH(request: Request, context: Params) {
   const body = (await request.json()) as {
     status?: ExpenseStatus;
     comment?: string;
+    revisionNote?: string;
   };
 
   if (!body.status || !Object.values(ExpenseStatus).includes(body.status)) {
     return NextResponse.json({ error: "Invalid status" }, { status: 400 });
   }
 
-  const needsComment =
-    body.status === ExpenseStatus.rejected || body.status === ExpenseStatus.needs_revision;
+  const needsComment = body.status === ExpenseStatus.rejected;
   if (needsComment && (!body.comment || !body.comment.trim())) {
     return NextResponse.json({ error: "Comment is required for this action" }, { status: 400 });
+  }
+
+  const revisionNote =
+    body.status === ExpenseStatus.needs_revision
+      ? (body.revisionNote ?? body.comment ?? "").trim()
+      : null;
+  if (body.status === ExpenseStatus.needs_revision) {
+    if (!revisionNote) {
+      return NextResponse.json({ error: "Revision reason is required" }, { status: 400 });
+    }
+    if (revisionNote.length < 10) {
+      return NextResponse.json(
+        { error: "Revision reason must be at least 10 characters" },
+        { status: 400 }
+      );
+    }
   }
 
   const expense = await prisma.expense.findFirst({
@@ -82,10 +98,15 @@ export async function PATCH(request: Request, context: Params) {
   const updated = await prisma.$transaction(async (tx) => {
     const next = await tx.expense.update({
       where: { id: expense.id },
-      data: { status: body.status },
+      data: {
+        status: body.status,
+        ...(body.status === ExpenseStatus.needs_revision
+          ? { revisionNote }
+          : { revisionNote: null }),
+      },
     });
 
-    if (body.comment?.trim()) {
+    if (body.comment?.trim() && body.status !== ExpenseStatus.needs_revision) {
       await tx.expenseComment.create({
         data: {
           expenseId: expense.id,
@@ -96,20 +117,20 @@ export async function PATCH(request: Request, context: Params) {
     }
 
     if (expense.submittedById !== org.userId) {
-      const label =
+      const message =
         body.status === ExpenseStatus.approved
-          ? "approved"
+          ? `Your expense "${expense.merchant}" was approved.`
           : body.status === ExpenseStatus.rejected
-            ? "rejected"
+            ? `Your expense "${expense.merchant}" was rejected.`
             : body.status === ExpenseStatus.needs_revision
-              ? "marked as needing revision"
-              : "updated";
+              ? `Your expense "${expense.merchant}" was sent back for revision${revisionNote ? `: ${revisionNote}` : "."}`
+              : `Your expense "${expense.merchant}" was updated.`;
 
       await tx.notification.create({
         data: {
           userId: expense.submittedById,
           organizationId: org.organization.id,
-          message: `Your expense "${expense.merchant}" was ${label}.`,
+          message,
           expenseId: expense.id,
         },
       });
@@ -131,7 +152,7 @@ export async function PATCH(request: Request, context: Params) {
         submitterName: expense.submittedBy.name ?? "there",
         merchant: expense.merchant ?? "your expense",
         status: body.status,
-        comment: body.comment ?? null,
+        comment: revisionNote ?? body.comment ?? null,
         expenseUrl: `${baseUrl}/org/${expense.organization.slug}/expenses/${expense.id}`,
       });
     } catch (emailErr) {
