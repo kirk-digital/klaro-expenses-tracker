@@ -101,7 +101,7 @@ export default async function ExpensesListPage({ params, searchParams }: Props) 
           <p className="text-muted-foreground">Track and review team spend</p>
         </div>
         <Link className={buttonVariants()} href={`/org/${params.slug}/expenses/new`}>
-          New expense
+          + Add expense
         </Link>
       </div>
 
