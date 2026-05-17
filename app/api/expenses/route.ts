@@ -255,6 +255,7 @@ async function finishExpenseResponse(
           userId,
           organizationId: org.organization.id,
           message: `${submitterName} submitted "${merchant}" for ${org.organization.currency} ${amount.toFixed(2)} — awaiting approval.`,
+          expenseId,
         })),
       });
     }

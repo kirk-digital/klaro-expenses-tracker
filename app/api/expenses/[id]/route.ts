@@ -110,6 +110,7 @@ export async function PATCH(request: Request, context: Params) {
           userId: expense.submittedById,
           organizationId: org.organization.id,
           message: `Your expense "${expense.merchant}" was ${label}.`,
+          expenseId: expense.id,
         },
       });
     }

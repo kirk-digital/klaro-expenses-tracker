@@ -22,6 +22,13 @@ export default async function NotificationsPage({ params }: Props) {
     },
     orderBy: { createdAt: "desc" },
     take: 50,
+    select: {
+      id: true,
+      message: true,
+      read: true,
+      createdAt: true,
+      expenseId: true,
+    },
   });
 
   return (

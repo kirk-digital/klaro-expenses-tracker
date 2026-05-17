@@ -127,8 +127,9 @@ model Expense {
   submittedBy  User             @relation("SubmittedBy", fields: [submittedById], references: [id])
   category     Category?        @relation(fields: [categoryId], references: [id])
   fund         Fund?            @relation(fields: [fundId], references: [id])
-  comments     ExpenseComment[]
-  receipts     Receipt[]
+  comments      ExpenseComment[]
+  receipts      Receipt[]
+  notifications Notification[]
 }
 
 enum ExpenseStatus {
@@ -166,8 +167,10 @@ model Notification {
   organizationId String
   message        String
   read           Boolean  @default(false)
+  expenseId      String?
   createdAt      DateTime @default(now())
 
   user         User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  expense      Expense?     @relation(fields: [expenseId], references: [id], onDelete: SetNull)
 }
