@@ -11,7 +11,8 @@
     "db:migrate": "prisma migrate dev",
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
-    "db:fix-currency": "tsx prisma/scripts/migrate-kirkdale-currency.ts"
+    "db:fix-currency": "tsx prisma/scripts/migrate-kirkdale-currency.ts",
+    "fix:categories": "tsx scripts/fix-kirkdale-home-categories.ts"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
