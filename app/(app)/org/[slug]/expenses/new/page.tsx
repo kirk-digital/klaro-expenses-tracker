@@ -3,7 +3,7 @@ import { redirect } from "next/navigation";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveOrgAccess } from "@/lib/org";
-import { ExpenseTypeSelector } from "@/components/expenses/expense-type-selector";
+import { ExpenseNewShell } from "@/components/expenses/expense-new-shell";
 
 type Props = { params: { slug: string } };
 
@@ -60,7 +60,7 @@ export default async function NewExpensePage({ params }: Props) {
         <h1 className="mt-2 text-2xl font-semibold tracking-tight">New expense</h1>
         <p className="text-muted-foreground">Submit an expense for approval</p>
       </div>
-      <ExpenseTypeSelector
+      <ExpenseNewShell
         slug={params.slug}
         categories={categories}
         milesThisYear={milesThisYear}

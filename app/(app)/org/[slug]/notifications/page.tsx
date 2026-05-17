@@ -4,18 +4,9 @@ import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveOrgAccess } from "@/lib/org";
 import { NotificationsMarkRead } from "@/components/notifications-mark-read";
+import { NotificationsList } from "@/components/notifications-list";
 
 type Props = { params: { slug: string } };
-
-function formatRelativeTime(date: Date): string {
-  const diff = Date.now() - new Date(date).getTime();
-  const mins = Math.floor(diff / 60000);
-  if (mins < 60) return `${mins}m ago`;
-  const hrs = Math.floor(mins / 60);
-  if (hrs < 24) return `${hrs}h ago`;
-  const days = Math.floor(hrs / 24);
-  return `${days}d ago`;
-}
 
 export default async function NotificationsPage({ params }: Props) {
   const session = await auth();
@@ -54,38 +45,7 @@ export default async function NotificationsPage({ params }: Props) {
           />
         </div>
 
-        <div className="divide-y divide-slate-50">
-          {notifications.map((n) => (
-            <div
-              key={n.id}
-              className={`flex items-start gap-3 px-5 py-3.5 transition-colors ${
-                !n.read
-                  ? "border-l-2 border-l-cyan-400 bg-cyan-50/40"
-                  : "border-l-2 border-l-transparent"
-              }`}
-            >
-              <Bell
-                className={`mt-0.5 h-4 w-4 shrink-0 ${
-                  n.read ? "text-slate-300" : "text-cyan-400"
-                }`}
-              />
-              <div className="min-w-0 flex-1">
-                <p className={`text-sm ${n.read ? "text-slate-400" : "text-slate-700"}`}>
-                  {n.message}
-                </p>
-                <p className="mt-0.5 text-xs text-slate-400">
-                  {formatRelativeTime(n.createdAt)}
-                </p>
-              </div>
-            </div>
-          ))}
-
-          {notifications.length === 0 && (
-            <p className="px-5 py-8 text-center text-sm text-slate-400">
-              No notifications yet
-            </p>
-          )}
-        </div>
+        <NotificationsList slug={params.slug} initialNotifications={notifications} />
       </div>
     </div>
   );

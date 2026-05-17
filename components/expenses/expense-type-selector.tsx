@@ -1,62 +1,96 @@
 "use client";
 
-import { useState } from "react";
 import { Receipt, Car } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { ExpenseCreateForm } from "./expense-create-form";
-import { MileageCreateForm } from "./mileage-create-form";
 
 type ExpenseType = "receipted" | "mileage";
 
+const options: {
+  value: ExpenseType;
+  icon: React.ElementType;
+  title: string;
+  description: string;
+}[] = [
+  {
+    value: "receipted",
+    icon: Receipt,
+    title: "Receipted expense",
+    description: "Any purchase with a receipt — materials, subscriptions, tools",
+  },
+  {
+    value: "mileage",
+    icon: Car,
+    title: "Mileage",
+    description: "Business travel — HMRC AMAP rates calculated automatically",
+  },
+];
+
 export function ExpenseTypeSelector({
-  slug,
-  categories,
-  milesThisYear,
-  orgType,
-  funds = [],
+  value,
+  onChange,
 }: {
-  slug: string;
-  categories: { id: string; name: string }[];
-  milesThisYear: number;
-  orgType: string;
-  funds?: { id: string; name: string }[];
+  value: ExpenseType;
+  onChange: (v: ExpenseType) => void;
 }) {
-  const [type, setType] = useState<ExpenseType>("receipted");
-
   return (
-    <div className="space-y-6">
-      <div className="flex gap-2 rounded-xl border bg-muted/30 p-1">
-        {[
-          { value: "receipted" as const, label: "Receipted expense", icon: Receipt },
-          { value: "mileage" as const, label: "Mileage", icon: Car },
-        ].map(({ value, label, icon: Icon }) => (
+    <div className="grid grid-cols-2 gap-3">
+      {options.map((opt) => {
+        const selected = value === opt.value;
+        const Icon = opt.icon;
+        return (
           <button
-            key={value}
+            key={opt.value}
             type="button"
-            onClick={() => setType(value)}
-            className={cn(
-              "flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm font-medium transition-colors",
-              type === value
-                ? "bg-background shadow-sm text-foreground"
-                : "text-muted-foreground hover:text-foreground"
-            )}
+            onClick={() => onChange(opt.value)}
+            className={`flex flex-col gap-3 rounded-xl border-[1.5px] p-4 text-left transition-all duration-150 ${
+              selected
+                ? "border-[#1E3A8A] bg-blue-50"
+                : "border-slate-200 bg-white hover:border-cyan-400"
+            }`}
           >
-            <Icon className="h-4 w-4" />
-            {label}
-          </button>
-        ))}
-      </div>
+            <div className="flex items-start justify-between">
+              <div
+                className={`flex h-9 w-9 items-center justify-center rounded-lg ${
+                  selected ? "bg-[#1E3A8A]/10" : "bg-slate-100"
+                }`}
+              >
+                <Icon
+                  className={`h-5 w-5 ${
+                    selected ? "text-[#1E3A8A]" : "text-slate-400"
+                  }`}
+                />
+              </div>
+              <span
+                className={`mt-0.5 flex h-3.5 w-3.5 shrink-0 items-center justify-center rounded-full border-[1.5px] transition-colors ${
+                  selected
+                    ? "border-[#1E3A8A] bg-[#1E3A8A]"
+                    : "border-slate-300"
+                }`}
+              >
+                {selected && (
+                  <span className="h-1.5 w-1.5 rounded-full bg-blue-50" />
+                )}
+              </span>
+            </div>
 
-      {type === "receipted" ? (
-        <ExpenseCreateForm
-          slug={slug}
-          categories={categories}
-          orgType={orgType}
-          funds={funds}
-        />
-      ) : (
-        <MileageCreateForm slug={slug} milesThisYear={milesThisYear} />
-      )}
+            <div>
+              <p
+                className={`text-sm font-medium ${
+                  selected ? "text-[#0F2057]" : "text-slate-700"
+                }`}
+              >
+                {opt.title}
+              </p>
+              <p
+                className={`mt-0.5 text-xs leading-relaxed ${
+                  selected ? "text-blue-500" : "text-slate-400"
+                }`}
+              >
+                {opt.description}
+              </p>
+            </div>
+          </button>
+        );
+      })}
     </div>
   );
 }
