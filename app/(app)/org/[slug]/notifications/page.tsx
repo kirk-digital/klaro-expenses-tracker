@@ -3,8 +3,7 @@ import { Bell } from "lucide-react";
 import { auth } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { resolveOrgAccess } from "@/lib/org";
-import { NotificationsMarkRead } from "@/components/notifications-mark-read";
-import { NotificationsList } from "@/components/notifications-list";
+import { NotificationsList } from "@/components/notifications/notifications-list";
 
 type Props = { params: { slug: string } };
 
@@ -43,17 +42,7 @@ export default async function NotificationsPage({ params }: Props) {
         </p>
       </div>
 
-      <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
-        <div className="flex items-center justify-between border-b border-slate-100 px-5 py-3.5">
-          <h2 className="text-sm font-semibold text-[#1E3A8A]">Recent</h2>
-          <NotificationsMarkRead
-            slug={params.slug}
-            className="text-xs font-medium text-cyan-500 transition-colors hover:text-cyan-600"
-          />
-        </div>
-
-        <NotificationsList slug={params.slug} initialNotifications={notifications} />
-      </div>
+      <NotificationsList slug={params.slug} initialNotifications={notifications} />
     </div>
   );
 }
