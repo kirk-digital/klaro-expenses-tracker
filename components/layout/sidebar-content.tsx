@@ -7,6 +7,7 @@ import type { MemberRole } from "@prisma/client";
 import {
   LayoutDashboard,
   Receipt,
+  BarChart2,
   CheckSquare,
   Bell,
   Settings,
@@ -27,6 +28,7 @@ type NavItem = {
 const nav = (slug: string): NavItem[] => [
   { href: `/org/${slug}/dashboard`, label: "Dashboard", icon: LayoutDashboard },
   { href: `/org/${slug}/expenses`, label: "Expenses", icon: Receipt },
+  { href: `/org/${slug}/reports`, label: "Reports", icon: BarChart2 },
   { href: `/org/${slug}/approvals`, label: "Approvals", icon: CheckSquare, role: "approver" },
   { href: `/org/${slug}/notifications`, label: "Notifications", icon: Bell },
   { href: `/org/${slug}/settings`, label: "Settings", icon: Settings, role: "admin" },
