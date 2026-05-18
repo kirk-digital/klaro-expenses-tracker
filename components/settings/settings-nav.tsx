@@ -28,7 +28,7 @@ export function SettingsNav({ slug, orgType }: { slug: string; orgType: string }
   }
 
   return (
-    <nav className="flex gap-6 border-b border-slate-200">
+    <nav className="flex gap-6 overflow-x-auto border-b border-slate-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {tabs.map((tab) => (
         <Link
           key={tab.href}
