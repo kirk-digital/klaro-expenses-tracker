@@ -45,7 +45,11 @@ export function ExpenseCreateForm({
   const isResubmit = editMode && currentStatus === "needs_revision";
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const vatRateRef = useRef<HTMLSelectElement>(null);
   const [loading, setLoading] = useState(false);
+  const [scanning, setScanning] = useState(false);
+  const [scanError, setScanError] = useState<string | null>(null);
+  const [scanSuccess, setScanSuccess] = useState(false);
   const [categoryId, setCategoryId] = useState<string>(
     editMode && expense?.categoryId
       ? expense.categoryId
@@ -54,6 +58,70 @@ export function ExpenseCreateForm({
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [fundType, setFundType] = useState(expense?.fundType ?? "unrestricted");
   const [fundId, setFundId] = useState(expense?.fundId ?? "");
+
+  const todayDefault = formatDateInput(new Date());
+
+  async function handleReceiptChange(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setReceiptFile(file);
+    setScanSuccess(false);
+    setScanError(null);
+
+    setScanning(true);
+
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+
+      const res = await fetch("/api/receipts/scan", {
+        method: "POST",
+        body: fd,
+        credentials: "include",
+      });
+
+      if (res.status === 503) {
+        return;
+      }
+
+      if (res.ok) {
+        const data = await res.json();
+        let filled = false;
+
+        const merchantEl = document.getElementById("merchant") as HTMLInputElement | null;
+        const amountEl = document.getElementById("amount") as HTMLInputElement | null;
+        const dateEl = document.getElementById("date") as HTMLInputElement | null;
+
+        if (data.merchant && !merchantEl?.value) {
+          if (merchantEl) merchantEl.value = data.merchant;
+          filled = true;
+        }
+        if (data.total != null && !amountEl?.value) {
+          if (amountEl) amountEl.value = String(data.total);
+          filled = true;
+        }
+        if (
+          data.date &&
+          dateEl &&
+          (!dateEl.value || dateEl.value === todayDefault)
+        ) {
+          dateEl.value = data.date;
+          filled = true;
+        }
+        if (data.vatRate && !vatRateRef.current?.value) {
+          vatRateRef.current!.value = String(data.vatRate);
+          filled = true;
+        }
+
+        if (filled) setScanSuccess(true);
+      }
+    } catch {
+      setScanError("Could not read receipt — please fill in the fields manually.");
+    } finally {
+      setScanning(false);
+    }
+  }
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -143,9 +211,7 @@ export function ExpenseCreateForm({
             type="date"
             required
             defaultValue={
-              editMode && expense
-                ? formatDateInput(expense.date)
-                : new Date().toISOString().slice(0, 10)
+              editMode && expense ? formatDateInput(expense.date) : todayDefault
             }
           />
         </div>
@@ -207,6 +273,7 @@ export function ExpenseCreateForm({
         <div className="space-y-2">
           <Label htmlFor="vatRate">VAT rate</Label>
           <select
+            ref={vatRateRef}
             id="vatRate"
             name="vatRate"
             defaultValue={editMode && expense?.vatRate ? expense.vatRate : ""}
@@ -283,9 +350,21 @@ export function ExpenseCreateForm({
               capture="environment"
               required={!editMode}
               className="sr-only"
-              onChange={(e) => setReceiptFile(e.target.files?.[0] ?? null)}
+              onChange={handleReceiptChange}
             />
           </div>
+          {scanning && (
+            <p className="mt-1 flex items-center gap-1.5 text-xs text-cyan-500">
+              <span className="animate-spin">⟳</span>
+              Reading receipt…
+            </p>
+          )}
+          {scanError && <p className="mt-1 text-xs text-amber-600">{scanError}</p>}
+          {!scanning && !scanError && scanSuccess && receiptFile && (
+            <p className="mt-1 text-xs text-slate-400">
+              Fields pre-filled from receipt — check and correct if needed.
+            </p>
+          )}
         </div>
         <Button
           type="submit"
