@@ -50,11 +50,10 @@ export function ExpenseCreateForm({
   const isResubmit = editMode && currentStatus === "needs_revision";
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const vatRateRef = useRef<HTMLSelectElement>(null);
   const [loading, setLoading] = useState(false);
   const [scanning, setScanning] = useState(false);
   const [scanError, setScanError] = useState<string | null>(null);
-  const [scanSuccess, setScanSuccess] = useState(false);
+  const [scanned, setScanned] = useState(false);
   const [categoryId, setCategoryId] = useState<string>(
     editMode && expense?.categoryId
       ? expense.categoryId
@@ -65,13 +64,25 @@ export function ExpenseCreateForm({
   const [fundId, setFundId] = useState(expense?.fundId ?? "");
 
   const todayDefault = formatDateInput(new Date());
+  const [merchant, setMerchant] = useState(
+    editMode && expense ? expense.merchant : ""
+  );
+  const [amount, setAmount] = useState(
+    editMode && expense ? Number(expense.amount).toFixed(2) : ""
+  );
+  const [date, setDate] = useState(
+    editMode && expense ? formatDateInput(expense.date) : todayDefault
+  );
+  const [vatRate, setVatRate] = useState(
+    editMode && expense?.vatRate ? expense.vatRate : ""
+  );
 
   async function handleReceiptChange(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
 
     setReceiptFile(file);
-    setScanSuccess(false);
+    setScanned(false);
     setScanError(null);
 
     setScanning(true);
@@ -94,32 +105,24 @@ export function ExpenseCreateForm({
         const data = await res.json();
         let filled = false;
 
-        const merchantEl = document.getElementById("merchant") as HTMLInputElement | null;
-        const amountEl = document.getElementById("amount") as HTMLInputElement | null;
-        const dateEl = document.getElementById("date") as HTMLInputElement | null;
-
-        if (data.merchant && !merchantEl?.value) {
-          if (merchantEl) merchantEl.value = data.merchant;
+        if (data.merchant) {
+          setMerchant(data.merchant);
           filled = true;
         }
-        if (data.total != null && !amountEl?.value) {
-          if (amountEl) amountEl.value = String(data.total);
+        if (data.total != null) {
+          setAmount(String(data.total));
           filled = true;
         }
-        if (
-          data.date &&
-          dateEl &&
-          (!dateEl.value || dateEl.value === todayDefault)
-        ) {
-          dateEl.value = data.date;
+        if (data.date) {
+          setDate(data.date);
           filled = true;
         }
-        if (data.vatRate && !vatRateRef.current?.value) {
-          vatRateRef.current!.value = String(data.vatRate);
+        if (data.vatRate != null && data.vatRate !== "") {
+          setVatRate(String(data.vatRate));
           filled = true;
         }
 
-        if (filled) setScanSuccess(true);
+        if (filled) setScanned(true);
       }
     } catch {
       setScanError("Could not read receipt — please fill in the fields manually.");
@@ -185,7 +188,8 @@ export function ExpenseCreateForm({
             id="merchant"
             name="merchant"
             required
-            defaultValue={editMode && expense ? expense.merchant : undefined}
+            value={merchant}
+            onChange={(e) => setMerchant(e.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -202,9 +206,8 @@ export function ExpenseCreateForm({
               min="0.01"
               required
               className="pl-7"
-              defaultValue={
-                editMode && expense ? Number(expense.amount).toFixed(2) : undefined
-              }
+              value={amount}
+              onChange={(e) => setAmount(e.target.value)}
             />
           </div>
         </div>
@@ -215,9 +218,8 @@ export function ExpenseCreateForm({
             name="date"
             type="date"
             required
-            defaultValue={
-              editMode && expense ? formatDateInput(expense.date) : todayDefault
-            }
+            value={date}
+            onChange={(e) => setDate(e.target.value)}
           />
         </div>
         <div className="space-y-2">
@@ -279,10 +281,10 @@ export function ExpenseCreateForm({
           <Label htmlFor="vatRate">VAT rate</Label>
           <div className="relative mt-1">
             <select
-              ref={vatRateRef}
               id="vatRate"
               name="vatRate"
-              defaultValue={editMode && expense?.vatRate ? expense.vatRate : ""}
+              value={vatRate}
+              onChange={(e) => setVatRate(e.target.value)}
               className={nativeSelectClassName}
             >
               <option value="">No VAT / Unknown</option>
@@ -370,17 +372,17 @@ export function ExpenseCreateForm({
             />
           </div>
           {scanning && (
-            <p className="mt-1 flex items-center gap-1.5 text-xs text-cyan-500">
-              <span className="animate-spin">⟳</span>
+            <p className="mt-2 flex items-center gap-1.5 text-xs text-cyan-500">
+              <span className="inline-block animate-spin">⟳</span>
               Reading receipt…
             </p>
           )}
-          {scanError && <p className="mt-1 text-xs text-amber-600">{scanError}</p>}
-          {!scanning && !scanError && scanSuccess && receiptFile && (
-            <p className="mt-1 text-xs text-slate-400">
-              Fields pre-filled from receipt — check and correct if needed.
+          {scanned && !scanning && (
+            <p className="mt-2 text-xs text-slate-400">
+              ✓ Fields pre-filled from receipt — check and correct if needed.
             </p>
           )}
+          {scanError && <p className="mt-2 text-xs text-amber-600">{scanError}</p>}
         </div>
         <Button
           type="submit"
