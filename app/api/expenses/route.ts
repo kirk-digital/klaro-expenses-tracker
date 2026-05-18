@@ -5,6 +5,9 @@ import { ExpenseStatus, ExpenseType } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireOrgFromRequest, type OrgRequestContext } from "@/lib/api-helpers";
 import { requireOrgMember, canViewAllExpenses } from "@/lib/permissions";
+import { sendEmail } from "@/lib/email";
+import { expenseSubmittedEmail } from "@/lib/email-templates";
+import { formatMoney } from "@/lib/format";
 import { saveReceipt } from "@/lib/storage";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "application/pdf"]);
@@ -236,10 +239,7 @@ async function handleFormExpense(request: Request, org: OrgRequestContext) {
 
 async function finishExpenseResponse(
   expenseId: string,
-  org: {
-    organization: { id: string; currency: string; requiresApproval: boolean };
-    userId: string;
-  },
+  org: OrgRequestContext,
   merchant: string,
   amount: number
 ) {
@@ -258,7 +258,10 @@ async function finishExpenseResponse(
           role: { in: ["owner", "admin", "approver"] },
           userId: { not: org.userId },
         },
-        select: { userId: true },
+        select: {
+          userId: true,
+          user: { select: { email: true, name: true } },
+        },
       });
 
       if (approvers.length > 0) {
@@ -270,6 +273,23 @@ async function finishExpenseResponse(
             expenseId,
           })),
         });
+
+        const baseUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+        const expenseUrl = `${baseUrl}/org/${org.organization.slug}/expenses/${expenseId}`;
+        const formattedAmount = formatMoney(amount);
+
+        for (const approver of approvers) {
+          if (!approver.user.email) continue;
+          const { subject, html } = expenseSubmittedEmail({
+            approverName: approver.user.name ?? "there",
+            submitterName,
+            merchant,
+            amount: formattedAmount,
+            orgName: org.organization.name,
+            expenseUrl,
+          });
+          await sendEmail({ to: approver.user.email, subject, html });
+        }
       }
     }
   } catch (e) {

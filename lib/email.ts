@@ -1,11 +1,29 @@
 import { Resend } from "resend";
 
-const FROM = process.env.EMAIL_FROM ?? "noreply@kirkdaledigital.co.uk";
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM =
+  process.env.RESEND_FROM_EMAIL ??
+  process.env.EMAIL_FROM ??
+  "noreply@expensestracker.app";
 
-function getResend(): Resend | null {
-  const key = process.env.RESEND_API_KEY;
-  if (!key) return null;
-  return new Resend(key);
+export async function sendEmail({
+  to,
+  subject,
+  html,
+}: {
+  to: string;
+  subject: string;
+  html: string;
+}) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("[email] RESEND_API_KEY not set — skipping email send");
+    return;
+  }
+  try {
+    await resend.emails.send({ from: FROM, to, subject, html });
+  } catch (err) {
+    console.error("[email] Failed to send:", err);
+  }
 }
 
 export async function sendInviteEmail({
@@ -21,14 +39,7 @@ export async function sendInviteEmail({
   inviteUrl: string;
   role: string;
 }) {
-  const resend = getResend();
-  if (!resend) {
-    console.warn("[email] RESEND_API_KEY not set; skipping invite email");
-    return;
-  }
-
-  await resend.emails.send({
-    from: FROM,
+  await sendEmail({
     to,
     subject: `You've been invited to join ${orgName} on Expenses Tracker`,
     html: `
@@ -46,15 +57,8 @@ export async function sendInviteEmail({
 }
 
 export async function sendWelcomeEmail({ to, name }: { to: string; name: string }) {
-  const resend = getResend();
-  if (!resend) {
-    console.warn("[email] RESEND_API_KEY not set; skipping welcome email");
-    return;
-  }
-
   const baseUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
-  await resend.emails.send({
-    from: FROM,
+  await sendEmail({
     to,
     subject: "Welcome to Expenses Tracker",
     html: `
@@ -66,73 +70,5 @@ export async function sendWelcomeEmail({ to, name }: { to: string; name: string 
         </a>
       </div>
     `,
-  });
-}
-
-export async function sendStatusChangeEmail({
-  to,
-  submitterName,
-  merchant,
-  status,
-  comment,
-  expenseUrl,
-}: {
-  to: string;
-  submitterName: string;
-  merchant: string;
-  status: "approved" | "rejected" | "needs_revision";
-  comment?: string | null;
-  expenseUrl: string;
-}) {
-  const resend = getResend();
-  if (!resend) {
-    console.warn("[email] RESEND_API_KEY not set; skipping status-change email");
-    return;
-  }
-
-  const subject =
-    status === "approved"
-      ? `Expense approved — ${merchant}`
-      : status === "rejected"
-        ? `Expense rejected — ${merchant}`
-        : `Expense needs revision — ${merchant}`;
-
-  const statusLabel =
-    status === "approved"
-      ? "approved"
-      : status === "rejected"
-        ? "rejected"
-        : "returned for revision";
-
-  const statusColour =
-    status === "approved" ? "#10b981" : status === "rejected" ? "#ef4444" : "#f59e0b";
-
-  const commentBlock = comment
-    ? `<p style="margin:16px 0 0;padding:12px 16px;background:#f3f4f6;border-left:4px solid #d1d5db;border-radius:4px;font-size:14px;color:#374151;">${comment}</p>`
-    : "";
-
-  const html = `
-    <div style="font-family:sans-serif;max-width:480px;margin:0 auto;color:#111827;">
-      <p style="font-size:16px;">Hi ${submitterName},</p>
-      <p style="font-size:15px;">Your expense for <strong>${merchant}</strong> has been
-        <strong style="color:${statusColour};">${statusLabel}</strong>.
-      </p>
-      ${commentBlock}
-      <p style="margin-top:24px;">
-        <a href="${expenseUrl}"
-           style="display:inline-block;padding:10px 20px;background:#6366f1;color:#fff;border-radius:6px;text-decoration:none;font-size:14px;font-weight:600;">
-          View expense
-        </a>
-      </p>
-      <p style="margin-top:32px;font-size:12px;color:#9ca3af;">
-        You are receiving this because you submitted an expense on Expenses Tracker.
-      </p>
-    </div>`;
-
-  await resend.emails.send({
-    from: FROM,
-    to,
-    subject,
-    html,
   });
 }

@@ -5,7 +5,13 @@ import { ExpenseStatus } from "@prisma/client";
 import { prisma } from "@/lib/prisma";
 import { requireOrgFromRequest, type OrgRequestContext } from "@/lib/api-helpers";
 import { requireOrgMember, canApprove, canViewAllExpenses } from "@/lib/permissions";
-import { sendStatusChangeEmail } from "@/lib/email";
+import { sendEmail } from "@/lib/email";
+import {
+  expenseApprovedEmail,
+  expenseNeedsRevisionEmail,
+  expenseRejectedEmail,
+} from "@/lib/email-templates";
+import { formatMoney } from "@/lib/format";
 import { saveReceipt } from "@/lib/storage";
 
 type Params = { params: { id: string } };
@@ -113,7 +119,7 @@ export async function PATCH(request: Request, context: Params) {
     where: { id, organizationId: org.organization.id },
     include: {
       submittedBy: { select: { id: true, name: true, email: true } },
-      organization: { select: { slug: true } },
+      organization: { select: { slug: true, name: true } },
     },
   });
 
@@ -183,18 +189,43 @@ export async function PATCH(request: Request, context: Params) {
       statusBody.status === ExpenseStatus.rejected ||
       statusBody.status === ExpenseStatus.needs_revision)
   ) {
-    try {
-      const baseUrl = process.env.NEXTAUTH_URL ?? "http://localhost:3000";
-      await sendStatusChangeEmail({
-        to: expense.submittedBy.email,
-        submitterName: expense.submittedBy.name ?? "there",
-        merchant: expense.merchant ?? "your expense",
-        status: statusBody.status,
-        comment: revisionNote ?? statusBody.comment ?? null,
-        expenseUrl: `${baseUrl}/org/${expense.organization.slug}/expenses/${expense.id}`,
-      });
-    } catch (emailErr) {
-      console.error("Status-change email failed:", emailErr);
+    const submitterEmail = expense.submittedBy.email;
+    if (submitterEmail) {
+      const baseUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
+      const expenseUrl = `${baseUrl}/org/${expense.organization.slug}/expenses/${expense.id}`;
+      const submitterName = expense.submittedBy.name ?? "there";
+      const merchant = expense.merchant ?? "your expense";
+      const formattedAmount = formatMoney(expense.amount.toString());
+      const orgName = expense.organization.name;
+
+      if (statusBody.status === ExpenseStatus.approved) {
+        const { subject, html } = expenseApprovedEmail({
+          submitterName,
+          merchant,
+          amount: formattedAmount,
+          orgName,
+          expenseUrl,
+        });
+        await sendEmail({ to: submitterEmail, subject, html });
+      } else if (statusBody.status === ExpenseStatus.rejected) {
+        const { subject, html } = expenseRejectedEmail({
+          submitterName,
+          merchant,
+          amount: formattedAmount,
+          orgName,
+          expenseUrl,
+        });
+        await sendEmail({ to: submitterEmail, subject, html });
+      } else if (statusBody.status === ExpenseStatus.needs_revision && revisionNote) {
+        const { subject, html } = expenseNeedsRevisionEmail({
+          submitterName,
+          merchant,
+          revisionNote,
+          orgName,
+          expenseUrl,
+        });
+        await sendEmail({ to: submitterEmail, subject, html });
+      }
     }
   }
 
