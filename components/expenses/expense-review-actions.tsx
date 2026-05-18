@@ -93,7 +93,7 @@ export function ExpenseReviewActions({
           <Button
             type="button"
             disabled={loading !== null}
-            className="w-full bg-emerald-600 text-white hover:bg-emerald-700 sm:w-auto"
+            className="min-h-[44px] w-full bg-emerald-600 text-white hover:bg-emerald-700 sm:w-auto"
             onClick={() => submit("approved")}
           >
             {loading === "approved" ? "Saving…" : "Approve"}
@@ -101,7 +101,7 @@ export function ExpenseReviewActions({
           <Button
             type="button"
             variant="destructive"
-            className="w-full sm:w-auto"
+            className="min-h-[44px] w-full sm:w-auto"
             disabled={loading !== null}
             onClick={() => submit("rejected")}
           >
@@ -110,7 +110,7 @@ export function ExpenseReviewActions({
           <Button
             type="button"
             variant="secondary"
-            className="w-full sm:w-auto"
+            className="min-h-[44px] w-full sm:w-auto"
             disabled={loading !== null}
             onClick={() => setRevisionOpen(true)}
           >

@@ -64,12 +64,12 @@ export function ApprovalsTable({
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Submitter</TableHead>
+              <TableHead className="hidden md:table-cell">Submitter</TableHead>
               <TableHead>Merchant</TableHead>
-              <TableHead>Category</TableHead>
+              <TableHead className="hidden md:table-cell">Category</TableHead>
               <TableHead className="text-right">Amount</TableHead>
-              <TableHead>Date</TableHead>
-              <TableHead>Status</TableHead>
+              <TableHead className="hidden sm:table-cell">Date</TableHead>
+              <TableHead className="hidden sm:table-cell">Status</TableHead>
               <TableHead className="text-right">Actions</TableHead>
             </TableRow>
           </TableHeader>
@@ -80,11 +80,11 @@ export function ApprovalsTable({
                 className="cursor-pointer"
                 onClick={() => router.push(`/org/${slug}/expenses/${e.id}`)}
               >
-                <TableCell>{e.submittedBy.name}</TableCell>
+                <TableCell className="hidden md:table-cell">{e.submittedBy.name}</TableCell>
                 <TableCell>
                   <span className="font-medium">{e.merchant}</span>
                 </TableCell>
-                <TableCell>
+                <TableCell className="hidden md:table-cell">
                   <span className="flex items-center gap-2">
                     <CategoryIcon name={e.category?.name} />
                     {e.category?.name ?? "—"}
@@ -93,8 +93,10 @@ export function ApprovalsTable({
                 <TableCell className="text-right tabular-nums">
                   {formatMoney(Number(e.amount))}
                 </TableCell>
-                <TableCell>{format(new Date(e.date), "MMM d, yyyy")}</TableCell>
-                <TableCell>
+                <TableCell className="hidden sm:table-cell">
+                  {format(new Date(e.date), "MMM d, yyyy")}
+                </TableCell>
+                <TableCell className="hidden sm:table-cell">
                   <ExpenseStatusBadge status={e.status} />
                 </TableCell>
                 <TableCell onClick={(ev) => ev.stopPropagation()}>

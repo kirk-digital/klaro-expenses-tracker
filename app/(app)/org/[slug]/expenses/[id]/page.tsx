@@ -66,7 +66,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
           <div className="flex items-center gap-2">
             <Link
               href={`/org/${params.slug}/expenses`}
-              className="flex items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
+              className="inline-flex min-h-[44px] items-center gap-1 text-sm text-muted-foreground transition-colors hover:text-foreground"
             >
               <ChevronLeft className="h-4 w-4" />
               <span>Expenses</span>
@@ -74,11 +74,11 @@ export default async function ExpenseDetailPage({ params }: Props) {
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">{expense.merchant}</h1>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
           {isSubmitter && ["pending", "needs_revision"].includes(expense.status) && (
             <Link
               href={`/org/${params.slug}/expenses/${expense.id}/edit`}
-              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
+              className="inline-flex min-h-[44px] w-full items-center justify-center gap-2 rounded-lg border border-slate-200 px-3 py-2 text-sm font-medium text-slate-600 transition-colors hover:border-[#1E3A8A] hover:text-[#1E3A8A] sm:w-auto"
             >
               <Pencil className="h-3.5 w-3.5" />
               Edit
@@ -93,7 +93,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
           <CardTitle>Details</CardTitle>
           <CardDescription>Submitted by {expense.submittedBy.name}</CardDescription>
         </CardHeader>
-        <CardContent className="grid gap-3 text-sm sm:grid-cols-2">
+        <CardContent className="grid grid-cols-1 gap-4 text-sm sm:grid-cols-2">
           <div>
             <p className="text-muted-foreground">Amount</p>
             <p className="text-lg font-semibold tabular-nums">

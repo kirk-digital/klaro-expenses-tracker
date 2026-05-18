@@ -40,7 +40,7 @@ export function ExpensesTable({
         {expenses.map((e) => (
           <div
             key={e.id}
-            className="flex cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 transition-all duration-150 hover:border-cyan-400 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] active:scale-[0.98]"
+            className="flex min-h-[44px] cursor-pointer items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 transition-all duration-150 hover:border-cyan-400 hover:shadow-[0_4px_12px_rgba(0,0,0,0.08)] active:scale-[0.98]"
             onClick={() => router.push(`/org/${slug}/expenses/${e.id}`)}
           >
             <div className="min-w-0 flex-1">

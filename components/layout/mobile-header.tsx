@@ -29,7 +29,8 @@ export function MobileHeader({
           className={buttonVariants({
             variant: "ghost",
             size: "icon",
-            className: "text-white hover:bg-white/10 hover:text-white",
+            className:
+              "min-h-[44px] min-w-[44px] text-white hover:bg-white/10 hover:text-white",
           })}
           aria-label="Open menu"
         >

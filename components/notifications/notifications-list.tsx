@@ -79,7 +79,7 @@ export function NotificationsList({
         <button
           type="button"
           onClick={markAllRead}
-          className="text-xs font-medium text-cyan-500 transition-colors hover:text-cyan-600"
+          className="min-h-[44px] rounded-md px-2 text-xs font-medium text-cyan-500 transition-colors hover:text-cyan-600"
         >
           Mark all read
         </button>
@@ -124,7 +124,7 @@ export function NotificationsList({
                     e.stopPropagation();
                     markOneRead(n.id);
                   }}
-                  className="rounded-md border border-slate-200 px-2 py-0.5 text-[10px] font-medium text-slate-400 transition-colors hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
+                  className="min-h-[44px] rounded-md border border-slate-200 px-3 py-2 text-xs font-medium text-slate-400 transition-colors hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
                 >
                   Mark read
                 </button>
@@ -136,7 +136,7 @@ export function NotificationsList({
                   dismiss(n.id);
                 }}
                 title="Dismiss"
-                className="flex h-5 w-5 items-center justify-center rounded-full border border-slate-200 text-slate-300 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-400"
+                className="flex h-11 w-11 min-h-[44px] min-w-[44px] items-center justify-center rounded-full border border-slate-200 text-slate-300 transition-colors hover:border-red-200 hover:bg-red-50 hover:text-red-400"
               >
                 <X className="h-2.5 w-2.5" />
               </button>

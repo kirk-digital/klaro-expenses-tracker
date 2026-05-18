@@ -42,7 +42,7 @@ export function OrgShell({
           userName={userName}
           unreadCount={unreadCount}
         />
-        <main className="mx-auto w-full max-w-6xl flex-1 bg-background px-4 py-8 sm:px-6">
+        <main className="mx-auto w-full max-w-6xl flex-1 overflow-x-hidden bg-background px-4 py-6 sm:px-6 sm:py-8">
           {children}
         </main>
       </div>

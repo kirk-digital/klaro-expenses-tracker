@@ -50,11 +50,11 @@ export function ApprovalActions({
   }
 
   return (
-    <div className="flex items-center justify-end gap-2">
+    <div className="flex w-full items-center justify-end gap-2 sm:w-auto">
       <Button
         type="button"
         size="sm"
-        className="bg-green-600 text-white hover:bg-green-700"
+        className="min-h-[44px] flex-1 bg-green-600 px-2 text-xs text-white hover:bg-green-700 sm:min-h-0 sm:flex-none sm:px-3 sm:text-sm"
         disabled={loading !== null}
         onClick={() => submit("approve")}
       >
@@ -68,6 +68,7 @@ export function ApprovalActions({
         type="button"
         size="sm"
         variant="destructive"
+        className="min-h-[44px] flex-1 px-2 text-xs sm:min-h-0 sm:flex-none sm:px-3 sm:text-sm"
         disabled={loading !== null}
         onClick={() => submit("reject")}
       >

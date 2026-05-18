@@ -16,6 +16,11 @@ import { Label } from "@/components/ui/label";
 type Category = { id: string; name: string };
 type Submitter = { id: string; name: string };
 
+const filterWrap = "w-full space-y-1.5 sm:w-auto";
+const selectTrigger =
+  "h-11 min-h-[44px] w-full sm:h-8 sm:min-h-0 sm:w-auto";
+const dateInput = "h-11 min-h-[44px] w-full sm:h-8 sm:min-h-0 sm:w-auto";
+
 export function ExpenseFilters({
   categories,
   submitters,
@@ -51,14 +56,14 @@ export function ExpenseFilters({
   );
 
   return (
-    <div className="flex flex-wrap items-end gap-3 rounded-xl border bg-card p-4">
-      <div className="space-y-1.5">
+    <div className="flex flex-wrap gap-2 rounded-xl border bg-card p-4">
+      <div className={filterWrap}>
         <Label className="text-xs text-muted-foreground">Status</Label>
         <Select
           value={searchParams.get("status") ?? "all"}
           onValueChange={(v) => setParam("status", v)}
         >
-          <SelectTrigger className="h-8 w-36">
+          <SelectTrigger className={selectTrigger}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -71,13 +76,13 @@ export function ExpenseFilters({
         </Select>
       </div>
 
-      <div className="space-y-1.5">
+      <div className={filterWrap}>
         <Label className="text-xs text-muted-foreground">Category</Label>
         <Select
           value={searchParams.get("categoryId") ?? "all"}
           onValueChange={(v) => setParam("categoryId", v)}
         >
-          <SelectTrigger className="h-8 w-44">
+          <SelectTrigger className={selectTrigger}>
             <SelectValue />
           </SelectTrigger>
           <SelectContent>
@@ -91,33 +96,33 @@ export function ExpenseFilters({
         </Select>
       </div>
 
-      <div className="space-y-1.5">
+      <div className={filterWrap}>
         <Label className="text-xs text-muted-foreground">From</Label>
         <Input
           type="date"
-          className="h-8 w-36"
+          className={dateInput}
           value={searchParams.get("from") ?? ""}
           onChange={(e) => setParam("from", e.target.value)}
         />
       </div>
-      <div className="space-y-1.5">
+      <div className={filterWrap}>
         <Label className="text-xs text-muted-foreground">To</Label>
         <Input
           type="date"
-          className="h-8 w-36"
+          className={dateInput}
           value={searchParams.get("to") ?? ""}
           onChange={(e) => setParam("to", e.target.value)}
         />
       </div>
 
       {showSubmitterFilter && (
-        <div className="space-y-1.5">
+        <div className={filterWrap}>
           <Label className="text-xs text-muted-foreground">Submitted by</Label>
           <Select
             value={searchParams.get("submittedById") ?? "all"}
             onValueChange={(v) => setParam("submittedById", v)}
           >
-            <SelectTrigger className="h-8 w-44">
+            <SelectTrigger className={selectTrigger}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -133,7 +138,13 @@ export function ExpenseFilters({
       )}
 
       {hasFilters && (
-        <Button type="button" variant="ghost" size="sm" className="h-8" onClick={clearAll}>
+        <Button
+          type="button"
+          variant="ghost"
+          size="sm"
+          className="min-h-[44px] w-full sm:h-8 sm:min-h-0 sm:w-auto"
+          onClick={clearAll}
+        >
           Clear filters
         </Button>
       )}

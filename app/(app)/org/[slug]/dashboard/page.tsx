@@ -197,21 +197,21 @@ export default async function DashboardPage({ params }: Props) {
 
   return (
     <div className="space-y-8">
-      <div className="mb-6 flex items-start justify-between">
+      <div className="mb-6 flex flex-wrap items-start justify-between gap-4">
         <div>
           <h1 className="text-2xl font-semibold text-[#1E3A8A]">Dashboard</h1>
           <p className="mt-1 text-sm text-slate-400">Overview for {org.name}</p>
         </div>
         <Link
           href={`/org/${params.slug}/expenses/new`}
-          className="flex items-center gap-1.5 rounded-lg bg-[#1E3A8A] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1a3278]"
+          className="flex min-h-[44px] items-center gap-1.5 rounded-lg bg-[#1E3A8A] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[#1a3278]"
         >
           <Plus className="h-4 w-4" />
           Add expense
         </Link>
       </div>
 
-      <div className="mb-6 grid grid-cols-3 gap-3">
+      <div className="mb-6 grid grid-cols-1 gap-3 sm:grid-cols-3">
         <div className="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
           <p className="text-[10px] font-medium uppercase tracking-widest text-slate-400">
             YTD spend
@@ -250,11 +250,11 @@ export default async function DashboardPage({ params }: Props) {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Link href={`/org/${params.slug}/expenses?status=approved`}>
           <Card className="relative overflow-hidden rounded-xl border border-slate-200 bg-white cursor-pointer transition-all duration-150 hover:border-cyan-400 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] active:scale-[0.98]">
             <div className="absolute inset-x-0 top-0 h-[3px] bg-emerald-500 rounded-t-xl" />
-            <div className="p-4 pt-5">
+            <div className="min-h-[80px] p-4 pt-5">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
                   Approved spend
@@ -271,7 +271,7 @@ export default async function DashboardPage({ params }: Props) {
         <Link href={`/org/${params.slug}/approvals`}>
           <Card className="relative overflow-hidden rounded-xl border border-slate-200 bg-white cursor-pointer transition-all duration-150 hover:border-cyan-400 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] active:scale-[0.98]">
             <div className="absolute inset-x-0 top-0 h-[3px] bg-amber-400 rounded-t-xl" />
-            <div className="p-4 pt-5">
+            <div className="min-h-[80px] p-4 pt-5">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
                   Pending approvals
@@ -288,7 +288,7 @@ export default async function DashboardPage({ params }: Props) {
         <Link href={`/org/${params.slug}/expenses?status=approved`}>
           <Card className="relative overflow-hidden rounded-xl border border-slate-200 bg-white cursor-pointer transition-all duration-150 hover:border-cyan-400 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] active:scale-[0.98]">
             <div className="absolute inset-x-0 top-0 h-[3px] bg-[#1E3A8A] rounded-t-xl" />
-            <div className="p-4 pt-5">
+            <div className="min-h-[80px] p-4 pt-5">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
                   Approved count
@@ -305,7 +305,7 @@ export default async function DashboardPage({ params }: Props) {
         <Link href={`/org/${params.slug}/expenses?status=rejected`}>
           <Card className="relative overflow-hidden rounded-xl border border-slate-200 bg-white cursor-pointer transition-all duration-150 hover:border-cyan-400 hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] active:scale-[0.98]">
             <div className="absolute inset-x-0 top-0 h-[3px] bg-red-500 rounded-t-xl" />
-            <div className="p-4 pt-5">
+            <div className="min-h-[80px] p-4 pt-5">
               <div className="flex items-center justify-between">
                 <p className="text-[10px] font-medium text-slate-400 uppercase tracking-widest">
                   Rejected count
@@ -387,10 +387,9 @@ export default async function DashboardPage({ params }: Props) {
                 return (
                   <div
                     key={item.category}
-                    className="grid items-center gap-3"
-                    style={{ gridTemplateColumns: "minmax(0,1fr) minmax(0,2fr) 3.5rem" }}
+                    className="grid grid-cols-[minmax(0,4.5rem)_1fr_auto] items-center gap-2 text-xs sm:grid-cols-[minmax(0,1fr)_minmax(0,2fr)_3.5rem] sm:gap-3"
                   >
-                    <p className="truncate text-left text-xs text-slate-500">{item.category}</p>
+                    <p className="truncate text-left text-slate-500">{item.category}</p>
                     <div className="h-2 overflow-hidden rounded-full bg-slate-100">
                       <div
                         className={`h-full rounded-full transition-all duration-500 ${
@@ -399,7 +398,7 @@ export default async function DashboardPage({ params }: Props) {
                         style={{ width: `${pct}%` }}
                       />
                     </div>
-                    <p className="text-right text-xs font-medium text-slate-600 tabular-nums">
+                    <p className="text-right font-medium text-slate-600 tabular-nums">
                       {formatMoney(Number(item.total))}
                     </p>
                   </div>
@@ -489,11 +488,11 @@ export default async function DashboardPage({ params }: Props) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Merchant</TableHead>
-                  <TableHead>Category</TableHead>
+                  <TableHead className="hidden sm:table-cell">Category</TableHead>
                   <TableHead className="text-right">Amount</TableHead>
-                  <TableHead>Date</TableHead>
+                  <TableHead className="hidden sm:table-cell">Date</TableHead>
                   <TableHead>Status</TableHead>
-                  <TableHead>Submitted by</TableHead>
+                  <TableHead className="hidden sm:table-cell">Submitted by</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -512,7 +511,7 @@ export default async function DashboardPage({ params }: Props) {
                           {e.merchant}
                         </Link>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <Link href={expenseHref} className="block">
                           <span className="flex items-center gap-2">
                             <CategoryIcon name={e.category?.name} />
@@ -525,7 +524,7 @@ export default async function DashboardPage({ params }: Props) {
                           {formatMoney(Number(e.amount))}
                         </Link>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <Link href={expenseHref} className="block">
                           {format(e.date, "MMM d, yyyy")}
                         </Link>
@@ -535,7 +534,7 @@ export default async function DashboardPage({ params }: Props) {
                           <ExpenseStatusBadge status={e.status} />
                         </Link>
                       </TableCell>
-                      <TableCell>
+                      <TableCell className="hidden sm:table-cell">
                         <Link href={expenseHref} className="block">
                           {e.submittedBy.name}
                         </Link>
