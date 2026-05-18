@@ -103,7 +103,10 @@ export function ExpenseCreateForm({
       }
 
       if (!res.ok) {
-        setScanError("Receipt scanning failed — please fill in the fields manually.");
+        const errData = await res.json().catch(() => ({}));
+        setScanError(
+          `Receipt scanning failed${errData.detail ? `: ${errData.detail}` : ""} — please fill in the fields manually.`
+        );
         return;
       }
 

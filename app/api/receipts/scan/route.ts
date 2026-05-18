@@ -78,8 +78,10 @@ Do not include any explanation or markdown. Return only the JSON object.`,
       total: parsed.total ?? null,
       vatRate: parsed.vatRate ?? null,
     });
-  } catch (err) {
-    console.error("[ocr] OpenAI error:", err);
-    return NextResponse.json({ error: "OCR failed" }, { status: 500 });
+  } catch (err: unknown) {
+    const message =
+      err instanceof Error ? err.message : "Unknown error";
+    console.error("[ocr] OpenAI error:", message);
+    return NextResponse.json({ error: "OCR failed", detail: message }, { status: 500 });
   }
 }
