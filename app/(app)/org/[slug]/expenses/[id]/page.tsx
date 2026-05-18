@@ -11,6 +11,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { ExpenseStatusBadge } from "@/components/expenses/status-badge";
 import { CategoryIcon } from "@/components/expenses/category-icon";
 import { ExpenseReviewActions } from "@/components/expenses/expense-review-actions";
+import { ExpenseComments } from "@/components/expenses/expense-comments";
 type Props = { params: { slug: string; id: string } };
 
 export default async function ExpenseDetailPage({ params }: Props) {
@@ -218,33 +219,12 @@ export default async function ExpenseDetailPage({ params }: Props) {
         </div>
       ) : null}
 
-      <Card className="rounded-xl">
-        <CardHeader>
-          <CardTitle>Comments</CardTitle>
-          <CardDescription>Discussion on this expense</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {expense.comments.length === 0 ? (
-            <p className="text-sm text-muted-foreground">No comments yet.</p>
-          ) : (
-            <div className="space-y-3">
-              {expense.comments.map((c) => (
-                <div key={c.id} className="rounded-lg border bg-muted/40 p-3">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="text-sm font-medium">{c.author.name}</p>
-                    <p className="text-xs text-muted-foreground">
-                      {format(c.createdAt, "MMM d, HH:mm")}
-                    </p>
-                  </div>
-                  <p className="mt-1 whitespace-pre-wrap text-sm text-muted-foreground">
-                    {c.body}
-                  </p>
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      <ExpenseComments
+        expenseId={expense.id}
+        slug={params.slug}
+        initialComments={expense.comments}
+        currentUserName={session.user.name ?? ""}
+      />
     </div>
   );
 }
