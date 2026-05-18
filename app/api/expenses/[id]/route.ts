@@ -15,6 +15,7 @@ import { formatMoney } from "@/lib/format";
 import { saveReceipt } from "@/lib/storage";
 import { recordExpenseHistory } from "@/lib/expense-history";
 import { calculateVat, parseVatRate } from "@/lib/vat";
+import { notifyUser } from "@/app/api/notifications/stream/route";
 
 type Params = { params: { id: string } };
 
@@ -186,6 +187,10 @@ export async function PATCH(request: Request, context: Params) {
     return next;
   });
 
+  if (expense.submittedById !== org.userId) {
+    notifyUser(expense.submittedById);
+  }
+
   if (statusBody.status === ExpenseStatus.approved) {
     await recordExpenseHistory({
       expenseId: expense.id,
@@ -340,6 +345,10 @@ async function notifyApproversOnResubmit(
         message: `${submitterName} resubmitted "${merchant}" for approval.`,
       })),
     });
+
+    for (const { userId } of approvers) {
+      notifyUser(userId);
+    }
   }
 }
 

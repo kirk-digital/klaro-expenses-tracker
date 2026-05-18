@@ -11,6 +11,7 @@ import { formatMoney } from "@/lib/format";
 import { saveReceipt } from "@/lib/storage";
 import { recordExpenseHistory } from "@/lib/expense-history";
 import { calculateVat, parseVatRate } from "@/lib/vat";
+import { notifyUser } from "@/app/api/notifications/stream/route";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "application/pdf"]);
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -287,6 +288,10 @@ async function finishExpenseResponse(
             expenseId,
           })),
         });
+
+        for (const { userId } of approvers) {
+          notifyUser(userId);
+        }
 
         const baseUrl = process.env.NEXTAUTH_URL?.replace(/\/$/, "") ?? "http://localhost:3000";
         const expenseUrl = `${baseUrl}/org/${org.organization.slug}/expenses/${expenseId}`;

@@ -3,24 +3,28 @@
 import { useEffect } from "react";
 import { useRouter } from "next/navigation";
 
-/**
- * Invisible component that silently refreshes server components on a timer.
- * Keeps the notification badge and unread count in sync without a page reload.
- */
-export function NotificationPoller({
-  intervalMs = 30_000,
-}: {
-  intervalMs?: number;
-}) {
+export function NotificationPoller() {
   const router = useRouter();
 
   useEffect(() => {
-    const id = setInterval(() => {
-      router.refresh();
-    }, intervalMs);
+    const es = new EventSource("/api/notifications/stream");
 
-    return () => clearInterval(id);
-  }, [router, intervalMs]);
+    es.onmessage = (event) => {
+      if (event.data === "ping") {
+        // New notification arrived — refresh server components
+        router.refresh();
+      }
+    };
+
+    es.onerror = () => {
+      // Connection dropped — EventSource auto-reconnects after ~3s
+      // No action needed
+    };
+
+    return () => {
+      es.close();
+    };
+  }, [router]);
 
   return null;
 }
