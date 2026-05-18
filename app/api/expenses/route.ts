@@ -10,6 +10,7 @@ import { expenseSubmittedEmail } from "@/lib/email-templates";
 import { formatMoney } from "@/lib/format";
 import { saveReceipt } from "@/lib/storage";
 import { recordExpenseHistory } from "@/lib/expense-history";
+import { calculateVat, parseVatRate } from "@/lib/vat";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "application/pdf"]);
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -37,6 +38,7 @@ export async function GET(request: Request) {
       amount: e.amount.toString(),
       miles: e.miles?.toString() ?? null,
       amapRate: e.amapRate?.toString() ?? null,
+      vatAmount: e.vatAmount?.toString() ?? null,
     }))
   );
 }
@@ -148,6 +150,7 @@ async function handleFormExpense(request: Request, org: OrgRequestContext) {
   const notes = formData.get("notes") ? String(formData.get("notes")) : null;
   const fundType = formData.get("fundType") ? String(formData.get("fundType")) : null;
   const fundId = formData.get("fundId") ? String(formData.get("fundId")) : null;
+  const vatRate = parseVatRate(formData.get("vatRate"));
   const file = formData.get("receipt");
 
   if (!merchant || !amountRaw || !dateRaw) {
@@ -204,6 +207,8 @@ async function handleFormExpense(request: Request, org: OrgRequestContext) {
     ? ExpenseStatus.pending
     : ExpenseStatus.approved;
 
+  const vatAmount = calculateVat(amount, vatRate);
+
   const expense = await prisma.expense.create({
     data: {
       organizationId: org.organization.id,
@@ -215,6 +220,8 @@ async function handleFormExpense(request: Request, org: OrgRequestContext) {
       date,
       notes,
       status: initialStatus,
+      vatRate,
+      vatAmount,
       ...(fundType ? { fundType } : {}),
       ...(fundId ? { fundId } : {}),
     },
@@ -308,5 +315,6 @@ async function finishExpenseResponse(
     amount: full?.amount.toString(),
     miles: full?.miles?.toString() ?? null,
     amapRate: full?.amapRate?.toString() ?? null,
+    vatAmount: full?.vatAmount?.toString() ?? null,
   });
 }

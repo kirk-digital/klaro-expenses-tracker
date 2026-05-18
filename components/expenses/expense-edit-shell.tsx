@@ -15,6 +15,7 @@ export type ExpenseForEdit = {
   amapRate: { toString(): string } | string | number | null;
   fundType: string | null;
   fundId: string | null;
+  vatRate: string | null;
   receipts: { filename: string }[];
 };
 

@@ -205,6 +205,26 @@ export function ExpenseCreateForm({
         )}
 
         <div className="space-y-2">
+          <Label htmlFor="vatRate">VAT rate</Label>
+          <select
+            id="vatRate"
+            name="vatRate"
+            defaultValue={editMode && expense?.vatRate ? expense.vatRate : ""}
+            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
+          >
+            <option value="">No VAT / Unknown</option>
+            <option value="20">20% — Standard rate</option>
+            <option value="5">5% — Reduced rate</option>
+            <option value="0">0% — Zero rated</option>
+            <option value="exempt">Exempt</option>
+            <option value="outside_scope">Outside scope</option>
+          </select>
+          <p className="text-xs text-slate-400">
+            Select the VAT rate shown on the receipt. Leave blank if unsure.
+          </p>
+        </div>
+
+        <div className="space-y-2">
           <Label htmlFor="notes">Notes</Label>
           <Textarea
             id="notes"

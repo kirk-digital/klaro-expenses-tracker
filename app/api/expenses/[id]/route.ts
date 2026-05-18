@@ -14,6 +14,7 @@ import {
 import { formatMoney } from "@/lib/format";
 import { saveReceipt } from "@/lib/storage";
 import { recordExpenseHistory } from "@/lib/expense-history";
+import { calculateVat, parseVatRate } from "@/lib/vat";
 
 type Params = { params: { id: string } };
 
@@ -52,6 +53,7 @@ export async function GET(request: Request, context: Params) {
   return NextResponse.json({
     ...expense,
     amount: expense.amount.toString(),
+    vatAmount: expense.vatAmount?.toString() ?? null,
   });
 }
 
@@ -352,6 +354,8 @@ async function handleSubmitterFieldUpdate(
     notes: string | null;
     fundType: string | null;
     fundId: string | null;
+    vatRate?: string | null;
+    vatAmount?: number | null;
     miles?: number;
     amapRate?: number;
   },
@@ -370,6 +374,9 @@ async function handleSubmitterFieldUpdate(
         ...(fields.amapRate != null ? { amapRate: fields.amapRate } : {}),
         ...(fields.fundType ? { fundType: fields.fundType } : { fundType: null }),
         ...(fields.fundId ? { fundId: fields.fundId } : { fundId: null }),
+        ...(fields.vatRate !== undefined
+          ? { vatRate: fields.vatRate, vatAmount: fields.vatAmount ?? null }
+          : {}),
       },
     });
 
@@ -409,6 +416,7 @@ async function handleSubmitterFieldUpdate(
     amount: full?.amount.toString(),
     miles: full?.miles?.toString() ?? null,
     amapRate: full?.amapRate?.toString() ?? null,
+    vatAmount: full?.vatAmount?.toString() ?? null,
   });
 }
 
@@ -435,6 +443,7 @@ async function handleSubmitterUpdateForm(
   const notes = formData.get("notes") ? String(formData.get("notes")) : null;
   const fundType = formData.get("fundType") ? String(formData.get("fundType")) : null;
   const fundId = formData.get("fundId") ? String(formData.get("fundId")) : null;
+  const vatRate = parseVatRate(formData.get("vatRate"));
   const file = formData.get("receipt");
 
   if (!merchant || !amountRaw || !dateRaw) {
@@ -473,6 +482,8 @@ async function handleSubmitterUpdateForm(
     }
   }
 
+  const vatAmount = calculateVat(amount, vatRate);
+
   let receipt: { buffer: Buffer; name: string; type: string } | null = null;
   if (file instanceof File && file.size > 0) {
     if (!ALLOWED.has(file.type)) {
@@ -491,7 +502,7 @@ async function handleSubmitterUpdateForm(
   return handleSubmitterFieldUpdate(
     org,
     expense,
-    { merchant, amount, date, categoryId, notes, fundType, fundId },
+    { merchant, amount, date, categoryId, notes, fundType, fundId, vatRate, vatAmount },
     receipt
   );
 }
@@ -577,6 +588,7 @@ async function handleResubmitForm(
   const notes = formData.get("notes") ? String(formData.get("notes")) : null;
   const fundType = formData.get("fundType") ? String(formData.get("fundType")) : null;
   const fundId = formData.get("fundId") ? String(formData.get("fundId")) : null;
+  const vatRate = parseVatRate(formData.get("vatRate"));
   const file = formData.get("receipt");
 
   if (!merchant || !amountRaw || !dateRaw) {
@@ -624,6 +636,8 @@ async function handleResubmitForm(
     }
   }
 
+  const vatAmount = calculateVat(amount, vatRate);
+
   const submitter = await prisma.user.findUnique({
     where: { id: org.userId },
     select: { name: true },
@@ -648,6 +662,8 @@ async function handleResubmitForm(
         notes,
         status: ExpenseStatus.pending,
         revisionNote: null,
+        vatRate,
+        vatAmount,
         ...(fundType ? { fundType } : { fundType: null }),
         ...(fundId ? { fundId } : { fundId: null }),
       },
@@ -695,6 +711,7 @@ async function handleResubmitForm(
     amount: full?.amount.toString(),
     miles: full?.miles?.toString() ?? null,
     amapRate: full?.amapRate?.toString() ?? null,
+    vatAmount: full?.vatAmount?.toString() ?? null,
   });
 }
 

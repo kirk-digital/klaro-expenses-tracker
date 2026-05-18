@@ -122,6 +122,8 @@ model Expense {
   amapRate       Decimal?
   fundId         String?
   fundType       String?
+  vatRate        String?
+  vatAmount      Decimal?      @db.Decimal(10, 2)
   status         ExpenseStatus @default(pending)
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt

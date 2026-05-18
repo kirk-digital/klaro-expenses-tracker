@@ -7,6 +7,7 @@ import { prisma } from "@/lib/prisma";
 import { resolveOrgAccess } from "@/lib/org";
 import { canApprove as roleCanApprove, canViewAllExpenses } from "@/lib/role-helpers";
 import { formatMoney } from "@/lib/format";
+import { vatRateLabel } from "@/lib/vat";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ExpenseStatusBadge } from "@/components/expenses/status-badge";
 import { CategoryIcon } from "@/components/expenses/category-icon";
@@ -131,6 +132,26 @@ export default async function ExpenseDetailPage({ params }: Props) {
             <p className="text-muted-foreground">Created</p>
             <p className="font-medium">{format(expense.createdAt, "MMM d, yyyy HH:mm")}</p>
           </div>
+          {expense.expenseType === "receipted" && expense.vatRate && (
+            <>
+              <div>
+                <p className="text-muted-foreground">VAT rate</p>
+                <p className="font-medium">{vatRateLabel(expense.vatRate)}</p>
+              </div>
+              {expense.vatAmount != null && (
+                <div>
+                  <p className="text-muted-foreground">VAT amount</p>
+                  <p className="font-medium tabular-nums">
+                    {formatMoney(Number(expense.vatAmount))}
+                  </p>
+                  <p className="text-xs text-muted-foreground">
+                    Net:{" "}
+                    {formatMoney(Number(expense.amount) - Number(expense.vatAmount))}
+                  </p>
+                </div>
+              )}
+            </>
+          )}
           {expense.expenseType === "mileage" && expense.miles !== null && (
             <>
               <div>

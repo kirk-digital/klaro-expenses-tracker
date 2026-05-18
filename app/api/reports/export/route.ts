@@ -62,16 +62,35 @@ export async function GET(req: Request) {
   });
 
   const rows = [
-    ["Date", "Merchant", "Category", "Amount (£)", "Status", "Submitted by", "Notes"],
-    ...expenses.map((e) => [
-      new Date(e.date).toLocaleDateString("en-GB"),
-      e.merchant,
-      e.category?.name ?? "",
-      Number(e.amount).toFixed(2),
-      e.status,
-      e.submittedBy.name ?? "",
-      e.notes ?? "",
-    ]),
+    [
+      "Date",
+      "Merchant",
+      "Category",
+      "Gross (£)",
+      "VAT Rate",
+      "VAT (£)",
+      "Net (£)",
+      "Status",
+      "Submitted by",
+      "Notes",
+    ],
+    ...expenses.map((e) => {
+      const gross = Number(e.amount);
+      const vat = e.vatAmount != null ? Number(e.vatAmount) : null;
+      const net = vat !== null ? gross - vat : null;
+      return [
+        new Date(e.date).toLocaleDateString("en-GB"),
+        e.merchant,
+        e.category?.name ?? "",
+        gross.toFixed(2),
+        e.vatRate ?? "",
+        vat !== null ? vat.toFixed(2) : "",
+        net !== null ? net.toFixed(2) : "",
+        e.status,
+        e.submittedBy.name ?? "",
+        e.notes ?? "",
+      ];
+    }),
   ];
 
   const csv = rows
