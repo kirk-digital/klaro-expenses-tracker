@@ -16,10 +16,10 @@ import { Label } from "@/components/ui/label";
 type Category = { id: string; name: string };
 type Submitter = { id: string; name: string };
 
-const filterWrap = "w-full space-y-1.5 sm:w-auto";
+const filterWrap = "min-w-0 w-full space-y-1.5 sm:w-auto";
 const selectTrigger =
   "h-11 min-h-[44px] w-full bg-white text-slate-700 sm:h-8 sm:min-h-0 sm:w-auto";
-const dateInput = "h-11 min-h-[44px] w-full sm:h-8 sm:min-h-0 sm:w-auto";
+const dateInput = "h-11 min-h-[44px] w-full max-w-full min-w-0 sm:h-8 sm:min-h-0 sm:w-auto";
 
 export function ExpenseFilters({
   categories,
@@ -56,7 +56,7 @@ export function ExpenseFilters({
   );
 
   return (
-    <div className="flex flex-wrap gap-2 rounded-xl border bg-card p-4">
+    <div className="flex flex-wrap gap-2 overflow-hidden rounded-xl border bg-card p-4">
       <div className={filterWrap}>
         <Label className="text-xs text-muted-foreground">Status</Label>
         <Select

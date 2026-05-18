@@ -55,9 +55,7 @@ export function ExpenseCreateForm({
   const [scanError, setScanError] = useState<string | null>(null);
   const [scanned, setScanned] = useState(false);
   const [categoryId, setCategoryId] = useState<string>(
-    editMode && expense?.categoryId
-      ? expense.categoryId
-      : (categories[0]?.id ?? "")
+    editMode && expense?.categoryId ? expense.categoryId : ""
   );
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [fundType, setFundType] = useState(expense?.fundType ?? "unrestricted");
@@ -189,7 +187,7 @@ export function ExpenseCreateForm({
   }
 
   return (
-    <Card className="rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] sm:p-6">
+    <Card className="overflow-hidden rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] sm:p-6">
       <form className="space-y-4" onSubmit={onSubmit}>
         <div className="space-y-2">
           <Label htmlFor="merchant">Merchant</Label>
@@ -220,13 +218,14 @@ export function ExpenseCreateForm({
             />
           </div>
         </div>
-        <div className="space-y-2">
+        <div className="min-w-0 space-y-2">
           <Label htmlFor="date">Date</Label>
           <Input
             id="date"
             name="date"
             type="date"
             required
+            className="max-w-full"
             value={date}
             onChange={(e) => setDate(e.target.value)}
           />
@@ -237,9 +236,10 @@ export function ExpenseCreateForm({
             value={categoryId}
             onValueChange={(v) => setCategoryId(v ?? "")}
             disabled={categories.length === 0}
+            required
           >
             <SelectTrigger className={formSelectTriggerClassName}>
-              <SelectValue placeholder="Select category" />
+              <SelectValue placeholder="Select a category" />
             </SelectTrigger>
             <SelectContent>
               {categories.map((c) => (
@@ -397,7 +397,7 @@ export function ExpenseCreateForm({
           type="submit"
           size="lg"
           className="w-full"
-          disabled={loading || categories.length === 0}
+          disabled={loading || categories.length === 0 || !categoryId}
         >
           {loading ? (
             <>
