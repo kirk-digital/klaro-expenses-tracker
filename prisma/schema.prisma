@@ -28,13 +28,14 @@ enum OrgType {
 }
 
 model Organization {
-  id        String   @id @default(cuid())
-  name      String
-  slug      String   @unique
-  type      OrgType  @default(business)
-  currency  String   @default("GBP")
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String   @id @default(cuid())
+  name              String
+  slug              String   @unique
+  type              OrgType  @default(business)
+  currency          String   @default("GBP")
+  requiresApproval  Boolean  @default(true)
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
 
   members       OrganizationMember[]
   invitations   Invitation[]

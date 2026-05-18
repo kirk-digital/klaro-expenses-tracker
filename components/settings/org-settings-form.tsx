@@ -10,10 +10,12 @@ export function OrgSettingsForm({
   slug,
   initialName,
   orgType,
+  requiresApproval,
 }: {
   slug: string;
   initialName: string;
   orgType: string;
+  requiresApproval: boolean;
 }) {
   const [error, setError] = useState<string | null>(null);
   const [pending, startTransition] = useTransition();
@@ -60,6 +62,32 @@ export function OrgSettingsForm({
           <p className="text-[11px] text-slate-400">
             Contact support to change your organisation type.
           </p>
+        </div>
+
+        <div className="border-t border-slate-100 pt-6">
+          <h3 className="text-sm font-semibold text-slate-700 mb-1">
+            Expense approvals
+          </h3>
+          <p className="text-xs text-slate-400 mb-4">
+            When enabled, expenses must be approved before they are considered
+            complete. Disable for sole traders or orgs without a separate approver.
+          </p>
+          <label className="flex items-center justify-between gap-4 cursor-pointer">
+            <div>
+              <p className="text-sm font-medium text-slate-700">
+                Require approval for all expenses
+              </p>
+              <p className="text-xs text-slate-400 mt-0.5">
+                If disabled, expenses are automatically approved on submission.
+              </p>
+            </div>
+            <input
+              type="checkbox"
+              name="requiresApproval"
+              defaultChecked={requiresApproval}
+              className="h-4 w-4 accent-cyan-500"
+            />
+          </label>
         </div>
 
         {error ? <p className="text-sm text-destructive">{error}</p> : null}

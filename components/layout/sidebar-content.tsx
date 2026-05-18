@@ -38,6 +38,7 @@ export function SidebarContent({
   role,
   userName,
   unreadCount,
+  requiresApproval,
   onNavigate,
 }: {
   slug: string;
@@ -45,6 +46,7 @@ export function SidebarContent({
   role: MemberRole;
   userName: string;
   unreadCount?: number;
+  requiresApproval: boolean;
   onNavigate?: () => void;
 }) {
   const pathname = usePathname();
@@ -60,6 +62,7 @@ export function SidebarContent({
 
       <nav className="flex flex-1 flex-col gap-1">
         {nav(slug).map((item) => {
+          if (item.href.endsWith("/approvals") && !requiresApproval) return null;
           if (item.role === "approver" && !canApprove(role)) return null;
           if (item.role === "admin" && !canManageOrg(role)) return null;
           const active =

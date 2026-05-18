@@ -9,6 +9,7 @@ export function OrgShell({
   role,
   userName,
   unreadCount,
+  requiresApproval,
   children,
 }: {
   slug: string;
@@ -16,6 +17,7 @@ export function OrgShell({
   role: MemberRole;
   userName: string;
   unreadCount?: number;
+  requiresApproval: boolean;
   children: React.ReactNode;
 }) {
   return (
@@ -31,6 +33,7 @@ export function OrgShell({
           role={role}
           userName={userName}
           unreadCount={unreadCount}
+          requiresApproval={requiresApproval}
         />
       </aside>
 
@@ -41,6 +44,7 @@ export function OrgShell({
           role={role}
           userName={userName}
           unreadCount={unreadCount}
+          requiresApproval={requiresApproval}
         />
         <main className="mx-auto w-full max-w-6xl flex-1 overflow-x-hidden bg-background px-4 py-6 sm:px-6 sm:py-8">
           {children}

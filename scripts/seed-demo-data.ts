@@ -115,6 +115,12 @@ async function main() {
   await seedSoleTrader(hash, uploadDir);
   await seedCharity(hash, uploadDir);
 
+  // Dave Mitchell Plumbing — sole trader, no approval needed
+  await prisma.organization.update({
+    where: { slug: "dave-mitchell-plumbing" },
+    data: { requiresApproval: false },
+  });
+
   console.log("\n✅ Seeding complete.\n");
   console.log("Demo logins (all password: Demo1234!):");
   console.log("  Business:    james@hartleyconstruction.co.uk");
@@ -485,7 +491,12 @@ async function seedSoleTrader(hash: string, uploadDir: string) {
     },
   });
   const org = await prisma.organization.create({
-    data: { name: "Dave Mitchell Plumbing", slug, type: "sole_trader" },
+    data: {
+      name: "Dave Mitchell Plumbing",
+      slug,
+      type: "sole_trader",
+      requiresApproval: false,
+    },
   });
   await prisma.organizationMember.create({
     data: { organizationId: org.id, userId: dave.id, role: "owner" },

@@ -13,12 +13,14 @@ export function MobileHeader({
   role,
   userName,
   unreadCount,
+  requiresApproval,
 }: {
   slug: string;
   orgName: string;
   role: MemberRole;
   userName: string;
   unreadCount?: number;
+  requiresApproval: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
@@ -43,6 +45,7 @@ export function MobileHeader({
             role={role}
             userName={userName}
             unreadCount={unreadCount}
+            requiresApproval={requiresApproval}
             onNavigate={() => setOpen(false)}
           />
         </SheetContent>

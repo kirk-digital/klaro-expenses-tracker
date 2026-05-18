@@ -85,9 +85,11 @@ export async function updateOrganizationAction(
     return { error: "Enter a valid organisation name" };
   }
 
+  const requiresApproval = formData.get("requiresApproval") === "on";
+
   await prisma.organization.update({
     where: { id: access.organization.id },
-    data: { name },
+    data: { name, requiresApproval },
   });
 
   return {};

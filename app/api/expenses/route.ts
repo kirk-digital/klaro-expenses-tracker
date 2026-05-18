@@ -110,6 +110,10 @@ async function handleJsonExpense(request: Request, org: OrgRequestContext) {
     }
   }
 
+  const initialStatus = org.organization.requiresApproval
+    ? ExpenseStatus.pending
+    : ExpenseStatus.approved;
+
   const expense = await prisma.expense.create({
     data: {
       organizationId: org.organization.id,
@@ -122,7 +126,7 @@ async function handleJsonExpense(request: Request, org: OrgRequestContext) {
       notes,
       miles,
       amapRate,
-      status: ExpenseStatus.pending,
+      status: initialStatus,
       ...(fundType ? { fundType: String(fundType) } : {}),
       ...(fundId ? { fundId: String(fundId) } : {}),
     },
@@ -192,6 +196,10 @@ async function handleFormExpense(request: Request, org: OrgRequestContext) {
 
   const buffer = Buffer.from(await file.arrayBuffer());
 
+  const initialStatus = org.organization.requiresApproval
+    ? ExpenseStatus.pending
+    : ExpenseStatus.approved;
+
   const expense = await prisma.expense.create({
     data: {
       organizationId: org.organization.id,
@@ -202,7 +210,7 @@ async function handleFormExpense(request: Request, org: OrgRequestContext) {
       merchant,
       date,
       notes,
-      status: ExpenseStatus.pending,
+      status: initialStatus,
       ...(fundType ? { fundType } : {}),
       ...(fundId ? { fundId } : {}),
     },
@@ -228,7 +236,10 @@ async function handleFormExpense(request: Request, org: OrgRequestContext) {
 
 async function finishExpenseResponse(
   expenseId: string,
-  org: { organization: { id: string; currency: string }; userId: string },
+  org: {
+    organization: { id: string; currency: string; requiresApproval: boolean };
+    userId: string;
+  },
   merchant: string,
   amount: number
 ) {
@@ -240,24 +251,26 @@ async function finishExpenseResponse(
   const submitterName = full?.submittedBy?.name ?? "A team member";
 
   try {
-    const approvers = await prisma.organizationMember.findMany({
-      where: {
-        organizationId: org.organization.id,
-        role: { in: ["owner", "admin", "approver"] },
-        userId: { not: org.userId },
-      },
-      select: { userId: true },
-    });
-
-    if (approvers.length > 0) {
-      await prisma.notification.createMany({
-        data: approvers.map(({ userId }) => ({
-          userId,
+    if (org.organization.requiresApproval) {
+      const approvers = await prisma.organizationMember.findMany({
+        where: {
           organizationId: org.organization.id,
-          message: `${submitterName} submitted "${merchant}" for ${org.organization.currency} ${amount.toFixed(2)} — awaiting approval.`,
-          expenseId,
-        })),
+          role: { in: ["owner", "admin", "approver"] },
+          userId: { not: org.userId },
+        },
+        select: { userId: true },
       });
+
+      if (approvers.length > 0) {
+        await prisma.notification.createMany({
+          data: approvers.map(({ userId }) => ({
+            userId,
+            organizationId: org.organization.id,
+            message: `${submitterName} submitted "${merchant}" for ${org.organization.currency} ${amount.toFixed(2)} — awaiting approval.`,
+            expenseId,
+          })),
+        });
+      }
     }
   } catch (e) {
     console.error("[expenses] Failed to create notifications", e);

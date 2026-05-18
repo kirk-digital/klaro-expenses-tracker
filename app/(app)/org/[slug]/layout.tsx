@@ -38,6 +38,7 @@ export default async function OrgLayout({
         role={access.role}
         userName={session.user.name ?? session.user.email ?? "User"}
         unreadCount={unreadCount}
+        requiresApproval={access.organization.requiresApproval}
       >
         {children}
       </OrgShell>
