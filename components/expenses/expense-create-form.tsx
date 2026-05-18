@@ -104,9 +104,9 @@ export function ExpenseCreateForm({
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        setScanError(
-          `Receipt scanning failed${errData.detail ? `: ${errData.detail}` : ""} — please fill in the fields manually.`
-        );
+        // Log the detail for debugging but don't expose raw API errors to users
+        if (errData.detail) console.warn("[ocr]", errData.detail);
+        setScanError("Receipt scanning is unavailable right now — please fill in the fields manually.");
         return;
       }
 
