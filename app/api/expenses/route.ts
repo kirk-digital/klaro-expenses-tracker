@@ -9,6 +9,7 @@ import { sendEmail } from "@/lib/email";
 import { expenseSubmittedEmail } from "@/lib/email-templates";
 import { formatMoney } from "@/lib/format";
 import { saveReceipt } from "@/lib/storage";
+import { recordExpenseHistory } from "@/lib/expense-history";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "application/pdf"]);
 const MAX_BYTES = 10 * 1024 * 1024;
@@ -243,6 +244,12 @@ async function finishExpenseResponse(
   merchant: string,
   amount: number
 ) {
+  await recordExpenseHistory({
+    expenseId,
+    actorId: org.userId,
+    action: "submitted",
+  });
+
   const full = await prisma.expense.findFirst({
     where: { id: expenseId, organizationId: org.organization.id },
     include: { category: true, receipts: true, submittedBy: { select: { name: true } } },

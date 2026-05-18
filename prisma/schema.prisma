@@ -15,10 +15,11 @@ model User {
   createdAt    DateTime @default(now())
   updatedAt    DateTime @updatedAt
 
-  memberships   OrganizationMember[]
-  expenses      Expense[]            @relation("SubmittedBy")
-  comments      ExpenseComment[]
-  notifications Notification[]
+  memberships    OrganizationMember[]
+  expenses       Expense[]            @relation("SubmittedBy")
+  comments       ExpenseComment[]
+  notifications  Notification[]
+  expenseHistory ExpenseHistory[]
 }
 
 enum OrgType {
@@ -132,6 +133,7 @@ model Expense {
   comments      ExpenseComment[]
   receipts      Receipt[]
   notifications Notification[]
+  history       ExpenseHistory[]
 }
 
 enum ExpenseStatus {
@@ -150,6 +152,17 @@ model ExpenseComment {
 
   expense Expense @relation(fields: [expenseId], references: [id], onDelete: Cascade)
   author  User    @relation(fields: [authorId], references: [id])
+}
+
+model ExpenseHistory {
+  id        String   @id @default(cuid())
+  expenseId String
+  expense   Expense  @relation(fields: [expenseId], references: [id], onDelete: Cascade)
+  actorId   String
+  actor     User     @relation(fields: [actorId], references: [id])
+  action    String
+  note      String?
+  createdAt DateTime @default(now())
 }
 
 model Receipt {

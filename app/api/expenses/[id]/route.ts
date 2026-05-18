@@ -13,6 +13,7 @@ import {
 } from "@/lib/email-templates";
 import { formatMoney } from "@/lib/format";
 import { saveReceipt } from "@/lib/storage";
+import { recordExpenseHistory } from "@/lib/expense-history";
 
 type Params = { params: { id: string } };
 
@@ -182,6 +183,28 @@ export async function PATCH(request: Request, context: Params) {
 
     return next;
   });
+
+  if (statusBody.status === ExpenseStatus.approved) {
+    await recordExpenseHistory({
+      expenseId: expense.id,
+      actorId: org.userId,
+      action: "approved",
+    });
+  } else if (statusBody.status === ExpenseStatus.rejected) {
+    await recordExpenseHistory({
+      expenseId: expense.id,
+      actorId: org.userId,
+      action: "rejected",
+      note: statusBody.comment?.trim(),
+    });
+  } else if (statusBody.status === ExpenseStatus.needs_revision) {
+    await recordExpenseHistory({
+      expenseId: expense.id,
+      actorId: org.userId,
+      action: "needs_revision",
+      note: revisionNote ?? undefined,
+    });
+  }
 
   if (
     expense.submittedById !== org.userId &&
@@ -368,6 +391,12 @@ async function handleSubmitterFieldUpdate(
         },
       });
     }
+  });
+
+  await recordExpenseHistory({
+    expenseId: expense.id,
+    actorId: org.userId,
+    action: "edited",
   });
 
   const full = await prisma.expense.findFirst({
@@ -644,6 +673,12 @@ async function handleResubmitForm(
     }
   });
 
+  await recordExpenseHistory({
+    expenseId: expense.id,
+    actorId: org.userId,
+    action: "resubmitted",
+  });
+
   try {
     await notifyApproversOnResubmit(org, expense.id, merchant, submitterName);
   } catch (e) {
@@ -735,6 +770,12 @@ async function handleResubmitJson(
       revisionNote: null,
     },
     include: { category: true, receipts: true },
+  });
+
+  await recordExpenseHistory({
+    expenseId: expense.id,
+    actorId: org.userId,
+    action: "resubmitted",
   });
 
   try {

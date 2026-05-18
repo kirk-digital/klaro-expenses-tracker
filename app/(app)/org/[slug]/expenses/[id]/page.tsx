@@ -14,6 +14,18 @@ import { ExpenseReviewActions } from "@/components/expenses/expense-review-actio
 import { ExpenseComments } from "@/components/expenses/expense-comments";
 type Props = { params: { slug: string; id: string } };
 
+function actionLabel(action: string): string {
+  const map: Record<string, string> = {
+    submitted: "submitted this expense",
+    approved: "approved this expense",
+    rejected: "rejected this expense",
+    needs_revision: "requested a revision",
+    resubmitted: "resubmitted this expense",
+    edited: "edited this expense",
+  };
+  return map[action] ?? action;
+}
+
 export default async function ExpenseDetailPage({ params }: Props) {
   const session = await auth();
   if (!session?.user?.id) redirect("/sign-in");
@@ -31,6 +43,10 @@ export default async function ExpenseDetailPage({ params }: Props) {
       comments: {
         orderBy: { createdAt: "asc" },
         include: { author: { select: { name: true } } },
+      },
+      history: {
+        include: { actor: { select: { name: true } } },
+        orderBy: { createdAt: "asc" },
       },
     },
   });
@@ -224,6 +240,41 @@ export default async function ExpenseDetailPage({ params }: Props) {
         initialComments={expense.comments}
         currentUserName={session.user.name ?? ""}
       />
+
+      {expense.history.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+          <h2 className="mb-4 text-sm font-semibold text-slate-700">Activity</h2>
+          <ol className="relative ml-2 space-y-4 border-l border-slate-200">
+            {expense.history.map((entry) => (
+              <li key={entry.id} className="ml-4">
+                <div className="absolute -left-1.5 mt-1 h-3 w-3 rounded-full border-2 border-white bg-slate-300" />
+                <div className="flex flex-wrap items-baseline gap-2">
+                  <span className="text-xs font-semibold text-slate-700">
+                    {entry.actor.name}
+                  </span>
+                  <span className="text-xs text-slate-500">
+                    {actionLabel(entry.action)}
+                  </span>
+                  <span className="text-xs text-slate-400">
+                    {new Date(entry.createdAt).toLocaleString("en-GB", {
+                      day: "numeric",
+                      month: "short",
+                      year: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })}
+                  </span>
+                </div>
+                {entry.note && (
+                  <p className="mt-0.5 text-xs italic text-slate-500">
+                    &ldquo;{entry.note}&rdquo;
+                  </p>
+                )}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
     </div>
   );
 }
