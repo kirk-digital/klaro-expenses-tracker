@@ -18,7 +18,7 @@ type Submitter = { id: string; name: string };
 
 const filterWrap = "w-full space-y-1.5 sm:w-auto";
 const selectTrigger =
-  "h-11 min-h-[44px] w-full sm:h-8 sm:min-h-0 sm:w-auto";
+  "h-11 min-h-[44px] w-full bg-white text-slate-700 sm:h-8 sm:min-h-0 sm:w-auto";
 const dateInput = "h-11 min-h-[44px] w-full sm:h-8 sm:min-h-0 sm:w-auto";
 
 export function ExpenseFilters({

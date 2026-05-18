@@ -25,6 +25,11 @@ function formatDateInput(value: Date | string) {
   return d.toISOString().slice(0, 10);
 }
 
+const formSelectTriggerClassName = "bg-white text-slate-700";
+
+const nativeSelectClassName =
+  "w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 py-2.5 pr-9 text-sm text-slate-700 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-cyan-400";
+
 export function ExpenseCreateForm({
   slug,
   categories,
@@ -172,7 +177,7 @@ export function ExpenseCreateForm({
   }
 
   return (
-    <Card className="rounded-xl p-6">
+    <Card className="rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)] sm:p-6">
       <form className="space-y-4" onSubmit={onSubmit}>
         <div className="space-y-2">
           <Label htmlFor="merchant">Merchant</Label>
@@ -222,7 +227,7 @@ export function ExpenseCreateForm({
             onValueChange={(v) => setCategoryId(v ?? "")}
             disabled={categories.length === 0}
           >
-            <SelectTrigger>
+            <SelectTrigger className={formSelectTriggerClassName}>
               <SelectValue placeholder="Select category" />
             </SelectTrigger>
             <SelectContent>
@@ -240,7 +245,7 @@ export function ExpenseCreateForm({
             <div className="space-y-2">
               <Label>Fund type</Label>
               <Select value={fundType} onValueChange={(v) => v && setFundType(v)}>
-                <SelectTrigger>
+                <SelectTrigger className={formSelectTriggerClassName}>
                   <SelectValue placeholder="Select fund type" />
                 </SelectTrigger>
                 <SelectContent>
@@ -254,7 +259,7 @@ export function ExpenseCreateForm({
               <div className="space-y-2">
                 <Label>Fund name</Label>
                 <Select value={fundId} onValueChange={(v) => v && setFundId(v)}>
-                  <SelectTrigger>
+                  <SelectTrigger className={formSelectTriggerClassName}>
                     <SelectValue placeholder="Select fund" />
                   </SelectTrigger>
                   <SelectContent>
@@ -272,20 +277,31 @@ export function ExpenseCreateForm({
 
         <div className="space-y-2">
           <Label htmlFor="vatRate">VAT rate</Label>
-          <select
-            ref={vatRateRef}
-            id="vatRate"
-            name="vatRate"
-            defaultValue={editMode && expense?.vatRate ? expense.vatRate : ""}
-            className="mt-1 w-full rounded-lg border border-slate-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-cyan-400"
-          >
-            <option value="">No VAT / Unknown</option>
-            <option value="20">20% — Standard rate</option>
-            <option value="5">5% — Reduced rate</option>
-            <option value="0">0% — Zero rated</option>
-            <option value="exempt">Exempt</option>
-            <option value="outside_scope">Outside scope</option>
-          </select>
+          <div className="relative mt-1">
+            <select
+              ref={vatRateRef}
+              id="vatRate"
+              name="vatRate"
+              defaultValue={editMode && expense?.vatRate ? expense.vatRate : ""}
+              className={nativeSelectClassName}
+            >
+              <option value="">No VAT / Unknown</option>
+              <option value="20">20% — Standard rate</option>
+              <option value="5">5% — Reduced rate</option>
+              <option value="0">0% — Zero rated</option>
+              <option value="exempt">Exempt</option>
+              <option value="outside_scope">Outside scope</option>
+            </select>
+            <div className="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+              <svg className="h-4 w-4 text-slate-400" viewBox="0 0 20 20" fill="currentColor">
+                <path
+                  fillRule="evenodd"
+                  d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            </div>
+          </div>
           <p className="text-xs text-slate-400">
             Select the VAT rate shown on the receipt. Leave blank if unsure.
           </p>
