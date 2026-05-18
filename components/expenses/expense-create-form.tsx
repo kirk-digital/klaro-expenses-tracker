@@ -96,7 +96,7 @@ export function ExpenseCreateForm({
       });
 
       if (res.status === 503) {
-        setScanError("Receipt scanning is not configured on this server — please fill in the fields manually.");
+        setScanError("Receipt scanning is not set up on this server. Please fill in the fields manually.");
         return;
       }
 
@@ -104,7 +104,7 @@ export function ExpenseCreateForm({
         const errData = await res.json().catch(() => ({}));
         // Log the detail for debugging but don't expose raw API errors to users
         if (errData.detail) console.warn("[ocr]", errData.detail);
-        setScanError("Receipt scanning is unavailable right now — please fill in the fields manually.");
+        setScanError("Receipt scanning is unavailable. Please fill in the fields manually.");
         return;
       }
 
@@ -132,7 +132,7 @@ export function ExpenseCreateForm({
         if (filled) setScanned(true);
       }
     } catch {
-      setScanError("Could not read receipt — please fill in the fields manually.");
+      setScanError("Could not read receipt. Please fill in the fields manually.");
     } finally {
       setScanning(false);
     }
@@ -297,9 +297,9 @@ export function ExpenseCreateForm({
               className={nativeSelectClassName}
             >
               <option value="">No VAT / Unknown</option>
-              <option value="20">20% — Standard rate</option>
-              <option value="5">5% — Reduced rate</option>
-              <option value="0">0% — Zero rated</option>
+              <option value="20">20% (Standard rate)</option>
+              <option value="5">5% (Reduced rate)</option>
+              <option value="0">0% (Zero rated)</option>
               <option value="exempt">Exempt</option>
               <option value="outside_scope">Outside scope</option>
             </select>
@@ -388,7 +388,7 @@ export function ExpenseCreateForm({
           )}
           {scanned && !scanning && (
             <p className="mt-2 text-xs text-slate-400">
-              ✓ Fields pre-filled from receipt — check and correct if needed.
+              ✓ Fields filled from your receipt. Please check before submitting.
             </p>
           )}
           {scanError && <p className="mt-2 text-xs text-amber-600">{scanError}</p>}

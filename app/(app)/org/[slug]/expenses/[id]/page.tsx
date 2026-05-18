@@ -169,7 +169,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
               <p className="text-muted-foreground">Fund</p>
               <p className="font-medium capitalize">
                 {expense.fundType}
-                {expense.fund?.name && ` — ${expense.fund.name}`}
+                {expense.fund?.name && `: ${expense.fund.name}`}
               </p>
             </div>
           )}
@@ -250,7 +250,7 @@ export default async function ExpenseDetailPage({ params }: Props) {
 
       {needsRevision && !isSubmitter ? (
         <div className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-500">
-          Awaiting revision from {expense.submittedBy.name}. You&apos;ll be notified when
+          Revision requested from {expense.submittedBy.name}. You will be notified when
           they resubmit.
         </div>
       ) : null}

@@ -51,7 +51,7 @@ export function ApprovalsTable({
         <div>
           <h2 className="font-semibold">No pending expenses</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            All caught up — nothing needs your approval right now.
+            Nothing needs your approval right now.
           </p>
         </div>
       </div>

@@ -14,13 +14,13 @@ const options: {
     value: "receipted",
     icon: Receipt,
     title: "Receipted expense",
-    description: "Any purchase with a receipt — materials, subscriptions, tools",
+    description: "Any purchase with a receipt: materials, subscriptions, tools",
   },
   {
     value: "mileage",
     icon: Car,
     title: "Mileage",
-    description: "Business travel — HMRC AMAP rates calculated automatically",
+    description: "Business travel. HMRC AMAP rates calculated automatically.",
   },
 ];
 

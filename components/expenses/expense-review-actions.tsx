@@ -137,7 +137,7 @@ export function ExpenseReviewActions({
                 rows={4}
                 required
                 minLength={10}
-                placeholder="e.g. Please attach the original receipt — a photo is fine"
+                placeholder="e.g. Please attach the original receipt. A photo is fine."
                 className="resize-none"
               />
             </div>

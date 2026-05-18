@@ -171,7 +171,7 @@ export function MileageCreateForm({
             <Label htmlFor="description">Journey purpose</Label>
             <Input
               id="description"
-              placeholder="e.g. Site visit — 12 High Street, Bristol"
+              placeholder="e.g. Site visit to 12 High Street, Bristol"
               {...form.register("description")}
             />
             {form.formState.errors.description && (

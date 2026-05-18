@@ -284,7 +284,7 @@ async function finishExpenseResponse(
           data: approvers.map(({ userId }) => ({
             userId,
             organizationId: org.organization.id,
-            message: `${submitterName} submitted "${merchant}" for ${org.organization.currency} ${amount.toFixed(2)} — awaiting approval.`,
+            message: `${submitterName} submitted "${merchant}" for ${org.organization.currency} ${amount.toFixed(2)}. Awaiting approval.`,
             expenseId,
           })),
         });
