@@ -57,7 +57,16 @@ Do not include any explanation or markdown. Return only the JSON object.`,
       ],
     });
 
-    const content = response.choices[0]?.message?.content ?? "{}";
+    const raw = response.choices[0]?.message?.content ?? "{}";
+
+    // Strip markdown code fences if GPT wrapped the response (e.g. ```json ... ```)
+    const content = raw
+      .replace(/^```(?:json)?\s*/i, "")
+      .replace(/\s*```$/i, "")
+      .trim();
+
+    console.log("[ocr] raw response:", raw);
+    console.log("[ocr] cleaned content:", content);
 
     let parsed: {
       merchant?: string;
@@ -68,14 +77,18 @@ Do not include any explanation or markdown. Return only the JSON object.`,
 
     try {
       parsed = JSON.parse(content);
-    } catch {
-      // GPT returned non-JSON — return empty result gracefully
+      console.log("[ocr] parsed:", parsed);
+    } catch (e) {
+      console.warn("[ocr] JSON parse failed:", e, "| content was:", content);
     }
+
+    // Normalise total — GPT sometimes returns it as a string
+    const total = parsed.total != null ? parseFloat(String(parsed.total)) : null;
 
     return NextResponse.json({
       merchant: parsed.merchant ?? null,
       date: parsed.date ?? null,
-      total: parsed.total ?? null,
+      total: Number.isFinite(total) ? total : null,
       vatRate: parsed.vatRate ?? null,
     });
   } catch (err: unknown) {
