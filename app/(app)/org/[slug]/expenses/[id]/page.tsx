@@ -51,9 +51,12 @@ export default async function ExpenseDetailPage({ params }: Props) {
   const showReview = canApprove && expense.status === "pending";
   const needsRevision = expense.status === "needs_revision";
 
-  const receiptUrl =
-    expense.receipts[0] &&
-    `/api/expenses/${expense.id}/receipt?orgSlug=${encodeURIComponent(params.slug)}`;
+  const isReceiptImage = (filename: string, mimeType: string) =>
+    mimeType.startsWith("image/") ||
+    /\.(svg|png|jpe?g)$/i.test(filename);
+
+  const isReceiptPdf = (filename: string, mimeType: string) =>
+    mimeType === "application/pdf" || filename.toLowerCase().endsWith(".pdf");
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -155,34 +158,50 @@ export default async function ExpenseDetailPage({ params }: Props) {
         </div>
       ) : null}
 
-      {receiptUrl ? (
-        <Card className="rounded-xl">
-          <CardHeader>
-            <CardTitle>Receipt</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {expense.receipts[0]?.mimeType === "application/pdf" ? (
-              <a
-                className="text-primary underline-offset-4 hover:underline"
-                href={receiptUrl}
-                target="_blank"
-                rel="noreferrer"
-              >
-                Open PDF receipt
-              </a>
-            ) : (
-              <div className="overflow-hidden rounded-lg border bg-muted/30">
-                {/* eslint-disable-next-line @next/next/no-img-element */}
+      {expense.expenseType !== "mileage" && expense.receipts.length > 0 && (
+        <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+          <h2 className="mb-3 text-sm font-semibold text-slate-700">Receipt</h2>
+          {expense.receipts.map((receipt) => (
+            <div
+              key={receipt.id}
+              className="overflow-hidden rounded-lg border border-slate-100"
+            >
+              {isReceiptImage(receipt.filename, receipt.mimeType) ? (
+                // eslint-disable-next-line @next/next/no-img-element
                 <img
-                  src={receiptUrl}
+                  src={`/api/receipts/${receipt.id}`}
                   alt="Receipt"
-                  className="mx-auto max-h-[480px] w-auto object-contain"
+                  className="w-full"
                 />
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      ) : null}
+              ) : isReceiptPdf(receipt.filename, receipt.mimeType) ? (
+                <a
+                  href={`/api/receipts/${receipt.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-3 text-sm text-[#1E3A8A] hover:underline"
+                >
+                  View PDF receipt
+                </a>
+              ) : (
+                <a
+                  href={`/api/receipts/${receipt.id}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2 px-4 py-3 text-sm text-[#1E3A8A] hover:underline"
+                >
+                  Download receipt
+                </a>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {expense.expenseType === "receipted" && expense.receipts.length === 0 && (
+        <div className="rounded-xl border border-dashed border-slate-200 bg-white p-8 text-center shadow-[0_1px_4px_rgba(0,0,0,0.06)]">
+          <p className="text-sm text-slate-400">No receipt attached</p>
+        </div>
+      )}
 
       {showReview ? (
         <ExpenseReviewActions slug={params.slug} expenseId={expense.id} />
