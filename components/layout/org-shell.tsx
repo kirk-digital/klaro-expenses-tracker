@@ -46,7 +46,7 @@ export function OrgShell({
           unreadCount={unreadCount}
           requiresApproval={requiresApproval}
         />
-        <main className="mx-auto w-full max-w-6xl flex-1 overflow-x-hidden bg-background px-4 py-6 sm:px-6 sm:py-8">
+        <main className="mx-auto w-full max-w-6xl flex-1 bg-background px-4 py-6 sm:px-6 sm:py-8">
           {children}
         </main>
       </div>
