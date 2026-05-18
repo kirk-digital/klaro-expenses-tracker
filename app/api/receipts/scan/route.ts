@@ -4,15 +4,16 @@ import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { auth } from "@/lib/auth";
 
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
 export async function POST(req: Request) {
   const session = await auth();
   if (!session?.user) return new NextResponse("Unauthorised", { status: 401 });
 
-  if (!process.env.OPENAI_API_KEY) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
     return NextResponse.json({ error: "OCR not configured" }, { status: 503 });
   }
+
+  const openai = new OpenAI({ apiKey });
 
   const formData = await req.formData();
   const file = formData.get("file") as File | null;
