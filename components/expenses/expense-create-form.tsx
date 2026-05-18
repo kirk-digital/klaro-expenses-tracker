@@ -98,6 +98,12 @@ export function ExpenseCreateForm({
       });
 
       if (res.status === 503) {
+        setScanError("Receipt scanning is not configured on this server — please fill in the fields manually.");
+        return;
+      }
+
+      if (!res.ok) {
+        setScanError("Receipt scanning failed — please fill in the fields manually.");
         return;
       }
 
