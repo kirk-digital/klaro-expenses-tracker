@@ -32,6 +32,7 @@ export function ExpenseCreateForm({
   funds = [],
   editMode = false,
   expense,
+  currentStatus,
 }: {
   slug: string;
   categories: { id: string; name: string }[];
@@ -39,7 +40,9 @@ export function ExpenseCreateForm({
   funds?: { id: string; name: string }[];
   editMode?: boolean;
   expense?: ExpenseForEdit;
+  currentStatus?: string;
 }) {
+  const isResubmit = editMode && currentStatus === "needs_revision";
   const router = useRouter();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(false);
@@ -65,7 +68,7 @@ export function ExpenseCreateForm({
         fd.set("fundId", fundId);
       }
     }
-    if (editMode && expense) {
+    if (isResubmit && expense) {
       fd.set("action", "resubmit");
     }
     setLoading(true);
@@ -80,10 +83,19 @@ export function ExpenseCreateForm({
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(data.error || (editMode ? "Could not resubmit expense" : "Could not create expense"));
+        toast.error(
+          data.error ||
+            (isResubmit
+              ? "Could not resubmit expense"
+              : editMode
+                ? "Could not save changes"
+                : "Could not create expense")
+        );
         return;
       }
-      toast.success(editMode ? "Expense resubmitted" : "Expense submitted");
+      toast.success(
+        isResubmit ? "Expense resubmitted" : editMode ? "Changes saved" : "Expense submitted"
+      );
       router.push(`/org/${slug}/expenses/${editMode && expense ? expense.id : data.id}`);
       router.refresh();
     } finally {
@@ -264,10 +276,12 @@ export function ExpenseCreateForm({
           {loading ? (
             <>
               <Loader2 className="animate-spin" />
-              {editMode ? "Resubmitting…" : "Submitting…"}
+              {isResubmit ? "Resubmitting…" : editMode ? "Saving…" : "Submitting…"}
             </>
-          ) : editMode ? (
+          ) : isResubmit ? (
             "Resubmit expense"
+          ) : editMode ? (
+            "Save changes"
           ) : (
             "Submit expense"
           )}

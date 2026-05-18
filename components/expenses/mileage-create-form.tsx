@@ -37,12 +37,15 @@ export function MileageCreateForm({
   milesThisYear = 0,
   editMode = false,
   expense,
+  currentStatus,
 }: {
   slug: string;
   milesThisYear?: number;
   editMode?: boolean;
   expense?: ExpenseForEdit;
+  currentStatus?: string;
 }) {
+  const isResubmit = editMode && currentStatus === "needs_revision";
   const router = useRouter();
   const [loading, setLoading] = useState(false);
 
@@ -77,7 +80,7 @@ export function MileageCreateForm({
       const amount = calculateAmount(miles);
 
       const payload = {
-        action: editMode ? "resubmit" : undefined,
+        ...(isResubmit ? { action: "resubmit" as const } : {}),
         expenseType: "mileage",
         date: values.date,
         merchant: values.description,
@@ -104,11 +107,21 @@ export function MileageCreateForm({
       if (!res.ok) {
         toast.error(
           data.error ||
-            (editMode ? "Could not resubmit mileage expense" : "Could not submit mileage expense")
+            (isResubmit
+              ? "Could not resubmit mileage expense"
+              : editMode
+                ? "Could not save changes"
+                : "Could not submit mileage expense")
         );
         return;
       }
-      toast.success(editMode ? "Mileage expense resubmitted" : "Mileage expense submitted");
+      toast.success(
+        isResubmit
+          ? "Mileage expense resubmitted"
+          : editMode
+            ? "Changes saved"
+            : "Mileage expense submitted"
+      );
       router.push(
         editMode && expense ? `/org/${slug}/expenses/${expense.id}` : `/org/${slug}/expenses`
       );
@@ -198,12 +211,16 @@ export function MileageCreateForm({
 
           <Button type="submit" className="w-full" disabled={loading}>
             {loading
-              ? editMode
+              ? isResubmit
                 ? "Resubmitting…"
-                : "Submitting…"
-              : editMode
+                : editMode
+                  ? "Saving…"
+                  : "Submitting…"
+              : isResubmit
                 ? "Resubmit expense"
-                : "Submit mileage"}
+                : editMode
+                  ? "Save changes"
+                  : "Submit mileage"}
           </Button>
         </form>
       </CardContent>

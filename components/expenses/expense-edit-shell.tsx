@@ -25,6 +25,7 @@ export function ExpenseEditShell({
   orgType,
   funds = [],
   expense,
+  currentStatus,
 }: {
   slug: string;
   categories: { id: string; name: string }[];
@@ -32,6 +33,7 @@ export function ExpenseEditShell({
   orgType: string;
   funds?: { id: string; name: string }[];
   expense: ExpenseForEdit;
+  currentStatus: string;
 }) {
   if (expense.expenseType === "mileage") {
     return (
@@ -40,6 +42,7 @@ export function ExpenseEditShell({
         milesThisYear={milesThisYear}
         editMode
         expense={expense}
+        currentStatus={currentStatus}
       />
     );
   }
@@ -52,6 +55,7 @@ export function ExpenseEditShell({
       funds={funds}
       editMode
       expense={expense}
+      currentStatus={currentStatus}
     />
   );
 }

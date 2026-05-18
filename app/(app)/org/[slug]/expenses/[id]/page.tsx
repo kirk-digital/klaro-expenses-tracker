@@ -74,7 +74,18 @@ export default async function ExpenseDetailPage({ params }: Props) {
           </div>
           <h1 className="text-2xl font-semibold tracking-tight">{expense.merchant}</h1>
         </div>
-        <ExpenseStatusBadge status={expense.status} />
+        <div className="flex items-center gap-2">
+          {isSubmitter && ["pending", "needs_revision"].includes(expense.status) && (
+            <Link
+              href={`/org/${params.slug}/expenses/${expense.id}/edit`}
+              className="inline-flex items-center gap-2 rounded-lg border border-slate-200 px-3 py-1.5 text-sm font-medium text-slate-600 transition-colors hover:border-[#1E3A8A] hover:text-[#1E3A8A]"
+            >
+              <Pencil className="h-3.5 w-3.5" />
+              Edit
+            </Link>
+          )}
+          <ExpenseStatusBadge status={expense.status} />
+        </div>
       </div>
 
       <Card className="rounded-xl">
@@ -146,18 +157,6 @@ export default async function ExpenseDetailPage({ params }: Props) {
           ) : null}
         </CardContent>
       </Card>
-
-      {needsRevision && isSubmitter ? (
-        <div className="flex justify-end">
-          <Link
-            href={`/org/${params.slug}/expenses/${expense.id}/edit`}
-            className="inline-flex items-center gap-2 rounded-lg bg-[#1E3A8A] px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-[#1E3A8A]/90"
-          >
-            <Pencil className="h-4 w-4" />
-            Edit &amp; resubmit
-          </Link>
-        </div>
-      ) : null}
 
       {expense.expenseType !== "mileage" && expense.receipts.length > 0 && (
         <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-[0_1px_4px_rgba(0,0,0,0.06)]">

@@ -22,7 +22,7 @@ export default async function EditExpensePage({ params }: Props) {
   if (
     !expense ||
     expense.submittedById !== session.user.id ||
-    expense.status !== "needs_revision"
+    !["needs_revision", "pending"].includes(expense.status)
   ) {
     redirect(`/org/${params.slug}/expenses/${params.id}`);
   }
@@ -71,8 +71,8 @@ export default async function EditExpensePage({ params }: Props) {
         >
           ← Back to expense
         </Link>
-        <h1 className="mt-2 text-2xl font-semibold tracking-tight">Edit expense</h1>
-        {expense.revisionNote ? (
+        <h1 className="mt-2 text-2xl font-bold text-[#1E3A8A]">Edit expense</h1>
+        {expense.status === "needs_revision" && expense.revisionNote ? (
           <div className="mt-3 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3">
             <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-amber-700">
               Revision requested
@@ -89,6 +89,7 @@ export default async function EditExpensePage({ params }: Props) {
         orgType={access.organization.type}
         funds={funds}
         expense={expense}
+        currentStatus={expense.status}
       />
     </div>
   );
