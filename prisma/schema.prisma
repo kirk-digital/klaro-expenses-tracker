@@ -44,6 +44,20 @@ model Organization {
   funds         Fund[]
   expenses      Expense[]
   notifications Notification[]
+  xeroConnection XeroConnection?
+}
+
+model XeroConnection {
+  id             String       @id @default(cuid())
+  organizationId String       @unique
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  tenantId       String
+  tenantName     String
+  accessToken    String       @db.Text
+  refreshToken   String       @db.Text
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 }
 
 model OrganizationMember {

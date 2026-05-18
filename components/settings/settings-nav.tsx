@@ -19,6 +19,7 @@ export function SettingsNav({ slug, orgType }: { slug: string; orgType: string }
     ...(orgType === "charity"
       ? [{ href: `/org/${slug}/settings/funds`, label: "Funds" }]
       : []),
+    { href: `/org/${slug}/settings/integrations`, label: "Integrations" },
     { href: `/org/${slug}/settings/security`, label: "Security" },
   ];
 

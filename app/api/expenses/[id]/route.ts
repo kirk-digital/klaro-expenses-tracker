@@ -16,6 +16,7 @@ import { saveReceipt } from "@/lib/storage";
 import { recordExpenseHistory } from "@/lib/expense-history";
 import { calculateVat, parseVatRate } from "@/lib/vat";
 import { notifyUser } from "@/app/api/notifications/stream/route";
+import { pushExpenseToXero } from "@/lib/xero";
 
 type Params = { params: { id: string } };
 
@@ -196,6 +197,9 @@ export async function PATCH(request: Request, context: Params) {
       expenseId: expense.id,
       actorId: org.userId,
       action: "approved",
+    });
+    pushExpenseToXero(expense.id).catch((err) => {
+      console.error("[xero] push failed:", err);
     });
   } else if (statusBody.status === ExpenseStatus.rejected) {
     await recordExpenseHistory({
