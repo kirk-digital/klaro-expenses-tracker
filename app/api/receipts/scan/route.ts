@@ -29,7 +29,7 @@ export async function POST(req: Request) {
   try {
     const response = await openai.chat.completions.create({
       model: "gpt-4o",
-      max_tokens: 300,
+      max_tokens: 400,
       messages: [
         {
           role: "user",
@@ -38,7 +38,7 @@ export async function POST(req: Request) {
               type: "image_url",
               image_url: {
                 url: `data:${mimeType};base64,${base64}`,
-                detail: "low",
+                detail: "auto",
               },
             },
             {
@@ -47,9 +47,10 @@ export async function POST(req: Request) {
 {
   "merchant": "store or business name (string)",
   "date": "date of purchase in YYYY-MM-DD format or null if unclear",
-  "total": "total amount paid as a number without currency symbol, or null if unclear",
-  "vatRate": "VAT rate if shown (20, 5, 0, or null)"
+  "total": "the final amount the customer actually paid after all discounts, as a number without currency symbol — NOT a subtotal, NOT a pre-discount total, NOT a balance to pay before discount. If multiple totals are shown, use the last/lowest 'Total' or 'Amount Due' line. Return null if unclear.",
+  "vatRate": "dominant VAT rate if shown (20, 5, or 0) — if multiple rates are present return the highest one, or null if not shown"
 }
+Look carefully at the full receipt. Read dates and numbers precisely — do not approximate.
 Do not include any explanation or markdown. Return only the JSON object.`,
             },
           ],
