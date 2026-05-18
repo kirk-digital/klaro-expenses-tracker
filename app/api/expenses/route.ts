@@ -11,7 +11,7 @@ import { formatMoney } from "@/lib/format";
 import { saveReceipt } from "@/lib/storage";
 import { recordExpenseHistory } from "@/lib/expense-history";
 import { calculateVat, parseVatRate } from "@/lib/vat";
-import { notifyUser } from "@/app/api/notifications/stream/route";
+import { notifyUser } from "@/lib/notifications-stream";
 
 const ALLOWED = new Set(["image/jpeg", "image/png", "application/pdf"]);
 const MAX_BYTES = 10 * 1024 * 1024;

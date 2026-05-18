@@ -15,7 +15,7 @@ import { formatMoney } from "@/lib/format";
 import { saveReceipt } from "@/lib/storage";
 import { recordExpenseHistory } from "@/lib/expense-history";
 import { calculateVat, parseVatRate } from "@/lib/vat";
-import { notifyUser } from "@/app/api/notifications/stream/route";
+import { notifyUser } from "@/lib/notifications-stream";
 import { pushExpenseToXero } from "@/lib/xero";
 
 type Params = { params: { id: string } };

@@ -1,21 +1,8 @@
 import { auth } from "@/lib/auth";
-
-// TODO: replace with Redis pub/sub for multi-instance deployments
-// Keep track of active streams per user
-// In production this would be Redis pub/sub — for now, use a module-level Map
-const clients = new Map<string, Set<ReadableStreamDefaultController>>();
-
-export function notifyUser(userId: string) {
-  const userClients = clients.get(userId);
-  if (!userClients) return;
-  userClients.forEach((controller) => {
-    try {
-      controller.enqueue(`data: ping\n\n`);
-    } catch {
-      // client disconnected
-    }
-  });
-}
+import {
+  registerStreamClient,
+  unregisterStreamClient,
+} from "@/lib/notifications-stream";
 
 export async function GET(req: Request) {
   const session = await auth();
@@ -27,14 +14,10 @@ export async function GET(req: Request) {
 
   const stream = new ReadableStream({
     start(controller) {
-      // Register this client
-      if (!clients.has(userId)) clients.set(userId, new Set());
-      clients.get(userId)!.add(controller);
+      registerStreamClient(userId, controller);
 
-      // Send initial ping to confirm connection
       controller.enqueue(`data: connected\n\n`);
 
-      // Send a keepalive comment every 25 seconds
       const keepalive = setInterval(() => {
         try {
           controller.enqueue(`: keepalive\n\n`);
@@ -43,11 +26,9 @@ export async function GET(req: Request) {
         }
       }, 25_000);
 
-      // Clean up on close
       req.signal.addEventListener("abort", () => {
         clearInterval(keepalive);
-        clients.get(userId)?.delete(controller);
-        if (clients.get(userId)?.size === 0) clients.delete(userId);
+        unregisterStreamClient(userId, controller);
       });
     },
   });

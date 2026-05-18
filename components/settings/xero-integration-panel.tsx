@@ -5,7 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { format } from "date-fns";
 import { toast } from "sonner";
-import { Button } from "@/components/ui/button";
+import { Button, buttonVariants } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 
 type Connection = {
   tenantName: string;
@@ -79,11 +80,12 @@ export function XeroIntegrationPanel({
             </Button>
           </div>
         ) : (
-          <Button asChild>
-            <Link href={`/api/integrations/xero/connect?slug=${encodeURIComponent(slug)}`}>
-              Connect to Xero
-            </Link>
-          </Button>
+          <Link
+            href={`/api/integrations/xero/connect?slug=${encodeURIComponent(slug)}`}
+            className={cn(buttonVariants())}
+          >
+            Connect to Xero
+          </Link>
         )}
       </div>
     </div>
