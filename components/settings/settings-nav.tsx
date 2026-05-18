@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
@@ -12,6 +13,7 @@ const inactiveClass = "text-slate-500 hover:text-slate-800";
 
 export function SettingsNav({ slug, orgType }: { slug: string; orgType: string }) {
   const pathname = usePathname();
+  const router = useRouter();
   const tabs = [
     { href: `/org/${slug}/settings`, label: "General" },
     { href: `/org/${slug}/settings/members`, label: "Members" },
@@ -28,16 +30,34 @@ export function SettingsNav({ slug, orgType }: { slug: string; orgType: string }
   }
 
   return (
-    <nav className="flex gap-6 overflow-x-auto border-b border-slate-200 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
-      {tabs.map((tab) => (
-        <Link
-          key={tab.href}
-          href={tab.href}
-          className={cn(baseClass, isActive(tab.href) ? activeClass : inactiveClass)}
+    <>
+      {/* Mobile: dropdown select */}
+      <div className="sm:hidden">
+        <select
+          value={pathname}
+          onChange={(e) => router.push(e.target.value)}
+          className="w-full appearance-none rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm font-medium text-slate-700 focus:border-transparent focus:outline-none focus:ring-2 focus:ring-cyan-400"
         >
-          {tab.label}
-        </Link>
-      ))}
-    </nav>
+          {tabs.map((tab) => (
+            <option key={tab.href} value={tab.href}>
+              {tab.label}
+            </option>
+          ))}
+        </select>
+      </div>
+
+      {/* Desktop: tab row */}
+      <nav className="hidden gap-6 border-b border-slate-200 sm:flex">
+        {tabs.map((tab) => (
+          <Link
+            key={tab.href}
+            href={tab.href}
+            className={cn(baseClass, isActive(tab.href) ? activeClass : inactiveClass)}
+          >
+            {tab.label}
+          </Link>
+        ))}
+      </nav>
+    </>
   );
 }
