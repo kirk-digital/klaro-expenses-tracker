@@ -21,7 +21,7 @@ type Props = {
 };
 
 const filterInputClass =
-  "h-11 min-h-[44px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm sm:h-9 sm:min-h-0";
+  "appearance-none h-11 min-h-[44px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent sm:h-9 sm:min-h-0";
 const filterSelectClass = filterInputClass;
 
 export default async function ReportsPage({ params, searchParams }: Props) {

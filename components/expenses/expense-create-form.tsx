@@ -218,16 +218,16 @@ export function ExpenseCreateForm({
             />
           </div>
         </div>
-        <div className="min-w-0 space-y-2">
+        <div className="space-y-2">
           <Label htmlFor="date">Date</Label>
-          <Input
+          <input
             id="date"
             name="date"
             type="date"
             required
-            className="max-w-full"
             value={date}
             onChange={(e) => setDate(e.target.value)}
+            className="appearance-none h-11 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent sm:h-9"
           />
         </div>
         <div className="space-y-2">

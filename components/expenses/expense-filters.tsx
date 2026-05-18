@@ -10,7 +10,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
 type Category = { id: string; name: string };
@@ -19,7 +18,8 @@ type Submitter = { id: string; name: string };
 const filterWrap = "min-w-0 w-full space-y-1.5 sm:w-auto";
 const selectTrigger =
   "h-11 min-h-[44px] w-full bg-white text-slate-700 sm:h-8 sm:min-h-0 sm:w-auto";
-const dateInput = "h-11 min-h-[44px] w-full max-w-full min-w-0 sm:h-8 sm:min-h-0 sm:w-auto";
+const dateInput =
+  "appearance-none h-11 min-h-[44px] w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-700 focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:border-transparent sm:h-8 sm:min-h-0 sm:w-auto";
 
 export function ExpenseFilters({
   categories,
@@ -98,7 +98,7 @@ export function ExpenseFilters({
 
       <div className={filterWrap}>
         <Label className="text-xs text-muted-foreground">From</Label>
-        <Input
+        <input
           type="date"
           className={dateInput}
           value={searchParams.get("from") ?? ""}
@@ -107,7 +107,7 @@ export function ExpenseFilters({
       </div>
       <div className={filterWrap}>
         <Label className="text-xs text-muted-foreground">To</Label>
-        <Input
+        <input
           type="date"
           className={dateInput}
           value={searchParams.get("to") ?? ""}
